@@ -98,7 +98,8 @@ package weave.utils
 			return arrayColl;			
 		}
 		
-		public static function resultAsNumberColumn( keys:Object , column:Object,columName:String = ""):NumberColumn{
+		public static function resultAsNumberColumn( keys:Object , column:Object,columName:String = ""):NumberColumn
+		{
 			var numColumn:NumberColumn = new NumberColumn(<attribute title="{columnName}"/>);
 			var keyVec:Vector.<IQualifiedKey> = Vector.<IQualifiedKey>(keys);
 			if (column is Number)

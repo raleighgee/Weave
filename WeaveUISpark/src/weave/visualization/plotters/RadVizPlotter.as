@@ -227,6 +227,7 @@ package weave.visualization.plotters
 		private var keyGlobalNormMap:Dictionary;
 		private var columnTitleMap:Dictionary;
 		
+		private static const EPSILON:Number = 0.0000001;
 		private const _currentScreenBounds:Bounds2D = new Bounds2D();
 		
 		public var doCDLayoutFlag:Boolean = false; // ToDo yenfu temporary flag to fix the code
@@ -339,7 +340,7 @@ package weave.visualization.plotters
 			}
 			
 		}
-		public function setAnchorLocations( ):void
+		public function setAnchorLocations():void
 		{	
 			var _columns:Array = columns.getObjects();
 			
@@ -930,7 +931,7 @@ package weave.visualization.plotters
 			
 			var innerRadius:Number = 0;
 			var outerRadius:Number = 0;
-			var temp:Number;
+			var temp:Number = 0;
 			
 			// the outer Radius is the sum of all the linkLengths
 			// the inner Radius is the difference between the longest arm
@@ -1017,9 +1018,9 @@ package weave.visualization.plotters
 			var normArray:Array = (localNormalization.value) ? keyNormMap[key] : keyGlobalNormMap[key];
 			var column:IAttributeColumn;
 			var stats:IColumnStatistics;
-			var value:Number;
-			var annCenterX:Number;
-			var annCenterY:Number;
+			var value:Number = 0;
+			var annCenterX:Number = 0;
+			var annCenterY:Number = 0;
 			var name:String;
 			var anchor:AnchorPoint;
 			var psCols:Array = movingCols;
@@ -1199,20 +1200,24 @@ package weave.visualization.plotters
 			return transposed;
 		}
 		
+		private function degreesToRadians(degrees:Number):Number {
+			return degrees * Math.PI / 180;
+		}
+		
 		private var _algorithm:ILayoutAlgorithm = newSpatialProperty(GreedyLayoutAlgorithm);
 		
 		public function reverseEngineer(key:IQualifiedKey, target:Point):void
 		{
 			var columns:LinkableHashMap = columns;
+			key = columns.getObjects()[0].keys[Math.floor(Math.random()*columns.getObjects()[0].keys.length)];
 			var eta:Number = getEtaTerm(key, columns);
 			var normArray:Array = (localNormalization.value) ? keyNormMap[key] : keyGlobalNormMap[key];
 			var column:IAttributeColumn;
 			var stats:IColumnStatistics;
 			var value:Number;
 			var linkLengths:Array = [];
-			var mov_cols:Array = pointSensitivityColumns;
 			var fixed_cols:Array = annCenterColumns;
-			
+			var mov_cols:Array = pointSensitivityColumns.slice();
 			var da_positions:Array = [];
 			
 			// compute the link lengths for a record
@@ -1229,25 +1234,39 @@ package weave.visualization.plotters
 			}
 			
 			var target_current:Point = target;
-			var current_link:int = 	linkLengths.pop();
+			var current_link:Number = 	linkLengths.pop();
 			mov_cols.pop();
 			
+			// intersect the circle centered at the target and of radius last link length
+			//       and the annulus centered at the record contructed with the remaining links
 			var ann_center:Point = getAnnulusCenter(key, fixed_cols, mov_cols, columns);
 			var ann_inner_radius:Number = getInnerRadius(key, fixed_cols, mov_cols, columns);
 			var ann_outer_radius:Number = getOuterRadius(key, fixed_cols, mov_cols, columns);
-			
 			
 			var current_circle_center:Point = target_current;
 			var current_circle_radius:Number = current_link;
 			
 			var intersections:Array = annulus_circle_intersection(ann_center, ann_inner_radius, ann_outer_radius, current_circle_center, current_circle_radius);
 			
-			var target_next:Point = select_intersection(intersections);
+			var target_next:Point;
+			// check if this was the case of infinity intersection
+			if(intersections.length == 1 && intersections[0].x == -1 && intersections[0].y == -1) {
+				// if that's the case, pick a random angle for the anchor position
+				var r:Number = degreesToRadians(Math.random()*360);
+				var t:Point = new Point(Math.cos(r) * current_circle_radius + current_circle_center, Math.sin(r) * current_circle_radius + current_circle_center);
+				da_positions.push(t);
+			} else {
+				target_next = select_intersection(intersections);
+				da_positions.push(target);
+			}
 			
 			while(linkLengths.length > 2)
 			{
 				target_current = target_next;
 				
+				current_link = linkLengths.pop();
+				mov_cols.pop();
+
 				ann_center = getAnnulusCenter(key, fixed_cols, mov_cols, columns);
 				ann_inner_radius = getInnerRadius(key, fixed_cols, mov_cols, columns);
 				ann_outer_radius = getOuterRadius(key, fixed_cols, mov_cols, columns);
@@ -1255,12 +1274,14 @@ package weave.visualization.plotters
 				current_circle_radius = current_link;
 				
 				intersections = annulus_circle_intersection(ann_center, ann_inner_radius, ann_outer_radius, current_circle_center, current_circle_radius);
+				if(!intersections.length)
+				{
+					return;
+				}
 				target_next = select_intersection(intersections);
 				
-				da_positions.push(da_angle(target_next, target_current));
+				da_positions.push(target_next);
 					
-				current_link = linkLengths.pop();
-				mov_cols.pop();
 			}
 			
 			if(linkLengths.length == 2)
@@ -1268,6 +1289,7 @@ package weave.visualization.plotters
 				target_current = target_next;
 				
 				mov_cols.pop();
+				trace(mov_cols.length);
 				var circle_a_center:Point = getAnnulusCenter(key, fixed_cols, mov_cols, columns);
 				var circle_a_radius:Number = linkLengths[0];
 				
@@ -1276,9 +1298,28 @@ package weave.visualization.plotters
 				
 				intersections = circle_circle_intersection(circle_a_center, circle_a_radius, circle_b_center, circle_b_radius);
 				target_next = select_intersection(intersections);
-				da_positions.push(da_angle(circle_a_center, target_next));			
+				da_positions.push(target_next);			
 				
 			}
+			
+			var angles:Array = da_angles(da_positions);
+			
+			var theta:Number;
+			var anchor:AnchorPoint;
+			anchors.delayCallbacks();
+			var _columns:Array = columns.getObjects();
+			for( i = 0; i < angles.length; i++ )
+			{
+				anchor = anchors.getObject(columns.getName(_columns[i])) as AnchorPoint ;								
+				anchor.x.value = Math.cos(angles[i]);
+				trace(anchor.x.value);
+				anchor.y.value = Math.sin(angles[i]);	
+				trace(anchor.y.value);
+				anchor.title.value = ColumnUtils.getTitle(_columns[i]);
+			}
+			anchors.resumeCallbacks();
+			
+			// loop over the anchors and set the x and y position to the cosine and sines of the angles.
 		}
 		
 		private function annulus_circle_intersection(ann_center:Point, ann_inner_radius:Number, ann_outer_radius:Number, circle_center:Point, circle_radius:Number):Array
@@ -1287,14 +1328,40 @@ package weave.visualization.plotters
 			var inner_intersection:Array = circle_circle_intersection(ann_center, ann_inner_radius, circle_center, circle_radius);
 			var outer_intersection:Array = circle_circle_intersection(ann_center, ann_outer_radius, circle_center, circle_radius);
 			
-			intersections = inner_intersection.concat(outer_intersection);
+			// check if there intersection array is of length 1.
+			if(outer_intersection.length == 1 && inner_intersection.length == 1) 
+			{
+				// check if the circle is inside the annulus
+				if((outer_intersection[0].x == -1 && outer_intersection[0].y == -1) &&
+					(inner_intersection[0].x == -1 && inner_intersection[0].y == -1))
+				{
+					// special mark for infinite solution
+					return [new Point(-1, -1)];
+				} 
+			}
+			// handle the case where the inner circle of the annulus null
+
+			if(outer_intersection.length == 1 && !inner_intersection.length)
+			{
+				if(outer_intersection[0].x == -1 && outer_intersection[0].y == -1)
+				{
+					return [new Point(-1, -1)];
+				}
+			}
+			if (!outer_intersection.length && !inner_intersection.length)
+			{
+				// no intersection
+				return [];
+			}
+			
+			intersections = inner_intersection.concat(outer_intersection, inner_intersection);
 			
 			return intersections;
 		}
 		
 		private function select_intersection(intersections:Array):Point
 		{
-			var number_intersections:Number = intersections.length;
+			var number_intersections:Number = intersections.length - 1;
 			var r:int = Math.floor(Math.random()*number_intersections) as int;
 			
 			return intersections[r];
@@ -1315,15 +1382,17 @@ package weave.visualization.plotters
 			
 			// Determine the straight-line distance between the centers.
 			var d:Number = Math.sqrt(dx*dx + dy*dy);
-			
-			if(d - (radius1 + radius2) > 0.000001 && Math.abs(d - (radius1 + radius2)) > 0.000001) {
-				// no solutions. circles do not intersect
+			trace(d - (radius1 + radius2));
+			if(d - (radius1 + radius2) > EPSILON && Math.abs(d - (radius1 + radius2)) > EPSILON) {
+				// no solutions. circles do not intersect[
 				return [];
 			}
 			
-			if(d - (radius1 - radius2) < 0.000001 && Math.abs(d - (radius1 - radius2)) > 0.000001) {
-				// no solutions. one circle is contained in the other
-				return [];
+			trace((d - Math.abs(radius1 - radius2)), Math.abs(d - Math.abs(radius1 - radius2)));
+			if(d - Math.abs(radius1 - radius2) < EPSILON && Math.abs(d - Math.abs(radius1 - radius2)) > EPSILON) {
+				// no solutions. one circle is contained in the other, however can lead to infinite
+				// intersection with annulus
+				return [new Point(-1, -1)];
 			}
 			
 			// a is the point where the line through the circle
@@ -1342,7 +1411,7 @@ package weave.visualization.plotters
 			
 			var h:Number = 0;
 			var h_temp:Number = radius1*radius1 - a * a;
-			if(h_temp < 0.000001)
+			if(h_temp < EPSILON)
 			{
 				h = 0;
 			}
@@ -1352,21 +1421,67 @@ package weave.visualization.plotters
 			}
 			
 			// Now determine the offsets of the intersection points from a.
-			var rx = -dy * h/d;
-			var ry = dx * h/d;
+			var rx:Number = -dy * h/d;
+			var ry:Number = dx * h/d;
 			
 			// Determine the absolute intersection points.
 			
 			var xi:Number = x2 + rx;
-			var xi_prime = x2 - rx;
-			var yi = y2 + ry;
-			var yi_prime = y2 - ry;
+			var xi_prime:Number = x2 - rx;
+			var yi:Number = y2 + ry;
+			var yi_prime:Number = y2 - ry;
 			
-			return [[xi, yi], [xi_prime, yi_prime]];
+			return [new Point(xi, yi), new Point(xi_prime, yi_prime)];
 		}
 		
-		private function da_angle(pointA:Point, pointB:Point):Number
+		// Returns the signed angle between consecutive links.
+		// The first angle is taken relative to the positive x axis.
+		private function da_angles(link_end_points:Array):Array
 		{
+			
+			var point_a:Point = new Point(0, 0); // origin
+			
+			if(!link_end_points.length) 
+			{
+				return [];	
+			}
+			
+			var point_b:Point = link_end_points.pop();
+			
+			if(!point_b)
+			{
+				return [];
+			}
+			var angles:Array = [];
+			
+			var angle:Number = Math.atan2(point_b.y, point_b.x);
+			if(angle < 0) {
+				angle = angle + 2*Math.PI;
+			}
+			angles.push(angle);
+			
+			var vertex:Point = point_b;
+			point_b = link_end_points.pop();
+			while(point_b) {
+				var magnitude_a:Number = Math.sqrt((point_a.x - vertex.x) ^ 2 + (point_a.y - vertex.y) ^ 2);
+				var magnitude_b:Number = Math.sqrt((point_b.x - vertex.x) ^ 2 + (point_b.y - vertex.y) ^ 2);
+				var dot_product:Number = (point_a.x - vertex.x * point_b.x - vertex.x) + (point_a.y - vertex.y * point_b.y - vertex.y);
+				angle = Math.acos(dot_product/(magnitude_a*magnitude_b));
+				if(angle <= -1*Math.PI) 
+				{
+					angle = angle + 2 * Math.PI;
+				} else if (angle > Math.PI)
+				{
+						angle = angle - 2 * Math.PI;
+				}
+				
+				angles.push(angle);
+				point_a = vertex;
+				vertex = point_b;
+				point_b = link_end_points.pop();
+			}
+			
+			return angles;
 			
 		}
 			

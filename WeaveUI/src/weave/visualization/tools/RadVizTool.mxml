@@ -141,12 +141,10 @@ along with Weave.  If not, see <http://www.gnu.org/licenses/>.
 				visualization.addElement(sprCont);
 				
 				visualization.addEventListener(MouseEvent.MOUSE_DOWN, handleMouseDown, true);
-				visualization.addEventListener(MouseEvent.CLICK, handleMouseClick, true);
 				
 				WeaveAPI.StageUtils.addEventCallback(MouseEvent.MOUSE_MOVE, this, handleMouseMove);
 				WeaveAPI.StageUtils.addEventCallback(MouseEvent.MOUSE_UP, this, handleMouseUp);
 				WeaveAPI.StageUtils.addEventCallback(KeyboardEvent.KEY_DOWN, this, handleRDown);
-				WeaveAPI.StageUtils.addEventCallback(KeyboardEvent.KEY_UP, this, handleRUp);
 			
 				_selection.addGroupedCallback(this,drawProbeLinesForSelectionKeySet);
 				_selection.addGroupedCallback(this, drawAnnuliCirclesForSelectionKeySet);
@@ -215,36 +213,18 @@ along with Weave.  If not, see <http://www.gnu.org/licenses/>.
 					return;
 				
 				var columns:Array = _plotter.columns.getObjects();
-				var inputValues:Array = new Array(); var inputNames:Array;
-				inputNames = ["mymatrix"];
-				var outputNames:Array = ["normOutput"];
-				var script:String = "frame <- data.frame(mymatrix)\n" +
-					"donorm <- function(frame){\n" +
-					"  RR <- nrow(frame)\n"+
-					"  CC <- ncol(frame)\n"+
-					"  for (z in 1:CC){\n"+
-					"    maxr <- max(frame[z])\n"+
-					"    minr <- min(frame[z])\n" +
-					"    rng <- (maxr - minr)\n" +
-					"    if (rng == 0)\n" +
-					"      rng <- 1\n"+
-					"    for(i in 1:RR){\n"+
-					"      frame[i,z] <- (frame[i,z] - minr) / rng\n"+
-					"    }\n"+
-					"  }\n"+
-					"  frame\n"+
-					"}\n"+
-					"normOutput <- donorm(frame)\n";
-				
 				var result:Array = joinColumns(columns);
 				latestjoinedColumnKeys = result[0];
 				var joinedColumns:Array = result[1];
 				
 				if (latestjoinedColumnKeys.length > 0)
 				{
-					inputValues.push(joinedColumns);
-					var query:AsyncToken = Rservice.runScript(null,inputNames,inputValues,outputNames,script,"",false,false,false);
-					addAsyncResponder(query, handleNormScriptResult, handleRunScriptFault,latestjoinedColumnKeys);
+					addAsyncResponder(
+						Rservice.normalize(joinedColumns),
+						handleNormScriptResult,
+						handleRunScriptFault,
+						latestjoinedColumnKeys
+					);
 				}
 			} 
 			
@@ -256,43 +236,14 @@ along with Weave.  If not, see <http://www.gnu.org/licenses/>.
 				normalizedColumns = [];
 				if (token != latestjoinedColumnKeys){return;}//handles two asynchronous calls made one after the other
 				
-				var temRObjects:Array = new Array();
-				//Object to stored returned result - Which is array of object{name: , value: }
-				var Robj:Array = event.result as Array;				
-				
-				if (Robj == null)
-				{
-					reportError("R Servlet did not return an Array of results as expected.");
-					return;
-				}
-				
-				//collecting Objects of type RResult(Should Match result object from Java side)
-				for (var i:int = 0; i < (event.result).length; i++)
-				{
-					if (Robj[i] == null)
-					{
-						trace("WARNING! R Service returned null in results array at index "+i);
-						continue;
-					}
-					var rResult:RResult = new RResult(Robj[i]);
-					temRObjects = (rResult.value) as Array;
-					
-					//handles cases when R returns a NaN, (for eg when all records have the same value for a column or when the dataset contains one record)
-					/* for(var f:int = 0; f< temRObjects.length; f++)
-					{
-					if(isNaN(temRObjects[f]))
-					return;
-					} */
-					
-				}	
+				//Object to store returned result
+				var result:Array = event.result as Array;				
 				
 				disposeObject(normalizedColumnsGroup);
 				normalizedColumnsGroup = newDisposableChild(this, CallbackCollection);
-				if(temRObjects== null)
-					return;
-				for (var j:int = 0 ; j < temRObjects.length; j++)
+				for (var j:int = 0; j < result.length; j++)
 				{
-					var col:NumberColumn = ResultUtils.resultAsNumberColumn(token,temRObjects[j],_plotter.columns.getNames()[j]+"norm");
+					var col:NumberColumn = ResultUtils.resultAsNumberColumn(token,result[j],_plotter.columns.getNames()[j]+" norm");
 					normalizedColumns.push(col);
 					registerLinkableChild(normalizedColumnsGroup, col);
 				}
@@ -424,37 +375,24 @@ along with Weave.  If not, see <http://www.gnu.org/licenses/>.
 				_probedAnchor.y.value = Math.sin(theta);
 			}
 			
-			private function handleMouseClick(event:MouseEvent):void
-			{
-				var tempPoint:Point = new Point(event.localX, event.localY);
-				screenBounds.projectPointTo(tempPoint, dataBounds);
-				var key:IQualifiedKey;
-				
-				trace(_selection.keys);
-				
-				// at this moment we can only reverse engineer a single record
-				if(_selection.keys.length) {
-					key = _selection.keys[0] as IQualifiedKey;
-				}
-				
-				if(RisDown)
-				{
-					_plotter.reverseEngineer(key, tempPoint);
-				}
-			}
-			
-			
-			private var RisDown:Boolean = false;
 			private function handleRDown():void
 			{
 				var event:KeyboardEvent = WeaveAPI.StageUtils.keyboardEvent;
-				RisDown = (event.keyCode == 82);
-			}
-			
-			private function handleRUp():void
-			{
-				var event:KeyboardEvent = WeaveAPI.StageUtils.keyboardEvent;
-				RisDown = (event.keyCode == 82);
+				// only run this code if 'r' is pressed
+				if(event.keyCode == 82) {
+					var tempPoint:Point = new Point(visualization.mouseX, visualization.mouseY);
+					screenBounds.projectPointTo(tempPoint, dataBounds);
+					var key:IQualifiedKey;
+					
+					trace(_selection.keys);
+					
+					// at this moment we can only reverse engineer a single record
+					if(_selection.keys.length) {
+						key = _selection.keys[0] as IQualifiedKey;
+					}
+					
+					_plotter.reverseEngineer(key, tempPoint);
+				}
 			}
 			
 			override public function getSelectableAttributeNames():Array

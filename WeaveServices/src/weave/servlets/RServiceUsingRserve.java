@@ -354,12 +354,12 @@ public class RServiceUsingRserve
 		return rexp;
 	}
 	
-	public static double[][] normalize(String docrootPath, Object[][] data) throws RemoteException
+	public static Object normalize(String docrootPath, Object[][] data) throws RemoteException
 	{
 		RConnection rConnection = null;
 		String[] inputNames = {"data"};
 		Object[] inputValues = {data};
-		double[][] result;
+		Object result;
 		
 		try
 		{
@@ -370,7 +370,8 @@ public class RServiceUsingRserve
 			
 			rConnection.eval(script);
 			
-			result = rConnection.eval("normalized").asDoubleMatrix();
+			REXP evalValue = rConnection.eval("normalized");
+			result = rexp2javaObj(evalValue);
 		}
 		catch (Exception e)
 		{
