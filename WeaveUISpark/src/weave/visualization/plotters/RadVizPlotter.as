@@ -1216,7 +1216,7 @@ package weave.visualization.plotters
 			var stats:IColumnStatistics;
 			var value:Number;
 			var linkLengths:Array = [];
-			var fixed_cols:Array = annCenterColumns;
+			var fixed_cols:Array = annCenterColumns.slice();
 			var mov_cols:Array = pointSensitivityColumns.slice();
 			var da_positions:Array = [];
 			
@@ -1235,7 +1235,7 @@ package weave.visualization.plotters
 			
 			var target_current:Point = target;
 			var current_link:Number = 	linkLengths.pop();
-			mov_cols.pop();
+			fixed_cols.push(mov_cols.pop());
 			
 			// intersect the circle centered at the target and of radius last link length
 			//       and the annulus centered at the record contructed with the remaining links
@@ -1251,9 +1251,10 @@ package weave.visualization.plotters
 			var target_next:Point;
 			// check if this was the case of infinity intersection
 			if(intersections.length == 1 && intersections[0].x == -1 && intersections[0].y == -1) {
-				// if that's the case, pick a random angle for the anchor position
+				// if that's the case, pick a random intersection
 				var r:Number = degreesToRadians(Math.random()*360);
-				var t:Point = new Point(Math.cos(r) * current_circle_radius + current_circle_center, Math.sin(r) * current_circle_radius + current_circle_center);
+				var t:Point = new Point(Math.cos(r) * current_circle_radius + current_circle_center.x, Math.sin(r) * current_circle_radius + current_circle_center.y);
+				target_next = t;
 				da_positions.push(t);
 			} else {
 				target_next = select_intersection(intersections);
@@ -1265,7 +1266,7 @@ package weave.visualization.plotters
 				target_current = target_next;
 				
 				current_link = linkLengths.pop();
-				mov_cols.pop();
+				fixed_cols.push(mov_cols.pop());
 
 				ann_center = getAnnulusCenter(key, fixed_cols, mov_cols, columns);
 				ann_inner_radius = getInnerRadius(key, fixed_cols, mov_cols, columns);
@@ -1288,7 +1289,7 @@ package weave.visualization.plotters
 			{
 				target_current = target_next;
 				
-				mov_cols.pop();
+				fixed_cols.push(mov_cols.pop());
 				trace(mov_cols.length);
 				var circle_a_center:Point = getAnnulusCenter(key, fixed_cols, mov_cols, columns);
 				var circle_a_radius:Number = linkLengths[0];
@@ -1298,7 +1299,8 @@ package weave.visualization.plotters
 				
 				intersections = circle_circle_intersection(circle_a_center, circle_a_radius, circle_b_center, circle_b_radius);
 				target_next = select_intersection(intersections);
-				da_positions.push(target_next);			
+				da_positions.push(target_next);
+				da_positions.push(circle_a_center);
 				
 			}
 			
