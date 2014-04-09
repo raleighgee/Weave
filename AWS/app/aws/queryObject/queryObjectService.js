@@ -1,10 +1,20 @@
 'use strict';
+goog.require('aws');
 /**
  * Query Object Service provides access to the main "singleton" query object.
  *
  * Don't worry, it will be possible to manage more than one query object in the
  * future.
  */
+
+var dataServiceURL = '/WeaveServices/DataService';
+
+var computationServiceURL = '/WeaveAnalystServices/ComputationalServlet';
+
+var scriptManagementURL = '/WeaveAnalystServices/ScriptManagementServlet';
+
+var projectManagementURL = '/WeaveAnalystServices/ProjectManagementServlet';
+
 //angular.module("aws.queryObject", [])
 QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
     
@@ -34,21 +44,32 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
     	if(this.dataObject.listOfScripts) {
     		return this.dataObject.listOfScripts;
     	}
-    	
-    	
     	var deferred = $q.defer();
-
-        aws.RClient.getListOfScripts(function(result) {
+    	
+    	//testing for re-factoring(removing clients)
+    	aws.queryService(scriptManagementURL,'getListOfScripts', ["REPORT_SCRIPTS_LIST",null],  function(result) {
             
         	that.dataObject.listOfScripts = result;
+        	console.log("removing clients", result);
         	
-        	// since this function executes async in a future turn of the event loop, we need to wrap
-            // our code into an $apply call so that the model changes are properly observed.
         	scope.$apply(function() {
                 deferred.resolve(result);
             });
         	
         });
+
+    	//works
+      //  aws.RClient.getListOfScripts(function(result) {
+            
+        	//that.dataObject.listOfScripts = result;
+        	
+        	// since this function executes async in a future turn of the event loop, we need to wrap
+            // our code into an $apply call so that the model changes are properly observed.
+        	//scope.$apply(function() {
+                //deferred.resolve(result);
+          //  });
+        	
+       // });
         
         // regardless of when the promise was or will be resolved or rejected,
         // then calls one of the success or error callbacks asynchronously as soon as the result

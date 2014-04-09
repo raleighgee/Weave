@@ -1,4 +1,4 @@
-package weave.aws.utils;
+package com.weave.utils;
 
 public class AWSUtils {
 

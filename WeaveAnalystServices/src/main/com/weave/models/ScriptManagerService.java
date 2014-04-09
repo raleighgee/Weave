@@ -1,4 +1,4 @@
-package weave.aws.servlets;
+package com.weave.models;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -21,7 +22,11 @@ import com.google.gson.Gson;
 public class ScriptManagerService extends WeaveServlet{
 
 	private static final long serialVersionUID = 1L;
-	private String awsConfigPath = "";
+	private static String awsConfigPath = "";
+	
+	public ScriptManagerService(){
+		
+	}
 	
 	public void init(ServletConfig config) throws ServletException {
 		super.init(config);
@@ -36,11 +41,13 @@ public class ScriptManagerService extends WeaveServlet{
 	 * @param scriptName
 	 * @return
 	 */
-	public String getScript(String scriptName) throws Exception{
+	public static String getScript(Map<String, Object> params) throws Exception{
     	File directory = new File(awsConfigPath, "RScripts");
 		String[] files = directory.list();
 		String scriptContents = new String();
 		BufferedReader bufr = null;
+		String scriptName = params.get("scriptName").toString(); 
+		
 		for (int i = 0; i < files.length; i++)
 		{
 			if(scriptName.equalsIgnoreCase(files[i])){
@@ -66,7 +73,7 @@ public class ScriptManagerService extends WeaveServlet{
 		return scriptContents;
     }
 
-	public String[] getListOfScripts() {
+	public static String[] getListOfScripts() {
 
 		File directory = new File(awsConfigPath, "RScripts");
 		String[] files = directory.list();
@@ -82,8 +89,10 @@ public class ScriptManagerService extends WeaveServlet{
 		return rFiles.toArray(new String[rFiles.size()]);
 	}
 
-	public String saveMetadata(String scriptName, Object scriptMetadata) throws Exception {
+	public static String saveMetadata(Map<String,Object>params) throws Exception {
 		String status = "";
+		String scriptName = params.get("scriptName").toString();
+		Object scriptMetadata = params.get("scriptMetadata");
 		if(scriptName.length() < 3){
 			return "The script Name is invalid";
 		}
@@ -105,9 +114,10 @@ public class ScriptManagerService extends WeaveServlet{
 		return status;
 	}
 
-	public Object getScriptMetadata(String scriptName) throws Exception {
+	public static Object getScriptMetadata(Map<String,Object> params) throws Exception {
 		File directory = new File(awsConfigPath, "RScripts");
 		String[] files = directory.list();
+		String scriptName = params.get("scriptName").toString();
 		int filecount = 0;
 		// this object will get the metadata from the json file
 		Object scriptMetadata = new Object();
@@ -148,8 +158,9 @@ public class ScriptManagerService extends WeaveServlet{
 		return scriptMetadata;
 	}
 	
-	public Boolean uploadNewScript(String scriptName, Object fileObject){
-		
+	public static Boolean uploadNewScript(Map<String, Object> params){
+		String scriptName = params.get("scriptName").toString();
+		Object fileObject = params.get("fileObject");
 		File file = new File(awsConfigPath + "RScripts", scriptName);
 		if (!file.exists()){
 			try{

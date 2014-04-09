@@ -1,19 +1,16 @@
-package weave.aws.engines;
+package com.weave.models;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 
-import weave.beans.RResult;
+import com.weave.interfaces.IScriptEngine;
 
-public class StataScriptEngine implements IScriptEngine {
+public class AwsStataService implements IScriptEngine {
 
-	public class ScriptResult {
-		public StataResult[] data;
-		public long[] times = new long[2];
-	}
-	public int runStataScript() throws IOException {
+	
+	public static int runStataScript() throws IOException {
 
 		Runtime run = Runtime.getRuntime();
 		Process proc = null;
