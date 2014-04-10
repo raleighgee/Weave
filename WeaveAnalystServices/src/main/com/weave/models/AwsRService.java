@@ -15,78 +15,37 @@ import org.rosuda.REngine.Rserve.RConnection;
 import org.rosuda.REngine.Rserve.RserveException;
 
 import weave.beans.RResult;
-import weave.config.WeaveContextParams;
-import weave.servlets.DataService;
 import weave.servlets.RServiceUsingRserve;
-import weave.utils.SQLUtils.WhereClause.NestedColumnFilters;
-
-import com.weave.beans.ScriptResult;
-import com.weave.utils.AWSUtils;
 
 public class AwsRService extends RServiceUsingRserve
 {
-	private static final long serialVersionUID = 1L;
-	
-	private static String awsConfigPath = "";
 	
 	public AwsRService(){
 		
 	}
 	
-	public void init(ServletConfig config) throws ServletException {
-		awsConfigPath = WeaveContextParams.getInstance(
-				config.getServletContext()).getConfigPath();
-		awsConfigPath = awsConfigPath + "/../aws-config/";
-	}
+	public void init(ServletConfig config) throws ServletException 
+	{
 
-	
+	}
 	
     // this functions intends to run a script with filtered.
 	// essentially this function should eventually be our main run script function.
 	// in the request object, there will be: the script name
 	// and the columns, along with their filters.
 	// TODO not completed
-	public static ScriptResult runScriptWithFilteredColumns(String scriptName,	int [] ids, NestedColumnFilters filters) throws Exception
+	public static Object runScript(String scriptAbsPath, Object[][] dataSet) throws Exception
 	{
-		RResult[] returnedColumns;
+		
+		Object[] inputValues = {scriptAbsPath, dataSet};
+		String[] inputNames = {"scriptAbsolutePath", "dataset"};
 
-		String cannedScript = awsConfigPath + "RScripts/" + scriptName;
-		
-		long startTime = System.currentTimeMillis();
-		
-		Object[][] recordData = DataService.getFilteredRows(ids, filters, null).recordData;
-		if(recordData.length == 0){
-			throw new RemoteException("Query produced no rows...");
-		}
-		Object[][] columnData = AWSUtils.transpose(recordData);
-		recordData = null;
-		
-		long endTime = System.currentTimeMillis();
-		
-		long time1 = endTime - startTime;
-		
-		Object[] inputValues = {cannedScript, columnData};
-		String[] inputNames = {"cannedScriptPath", "dataset"};
-
-		String finalScript = "scriptFromFile <- source(cannedScriptPath)\n" +
+		String script = "scriptFromFile <- source(scriptAbsolutePath)\n" +
 					         "scriptFromFile$value(dataset)"; 
 
 		String[] outputNames = {};
 		
-		startTime = System.currentTimeMillis();
-		returnedColumns = runAWSScript(null, inputNames, inputValues, outputNames, finalScript, "", false, false);
-		endTime = System.currentTimeMillis();
-		columnData = null;
-		long time2 = endTime - startTime;
-		
-		ScriptResult result = new ScriptResult();
-		
-		result.data = returnedColumns;
-		result.times[0] = time1;
-		result.times[1] = time2;
-		
-		return result;
-
+		return runAWSScript(null, inputNames, inputValues, outputNames, script, "", false, false);
 	}
 	
 	private static RResult[] runAWSScript( String docrootPath, String[] inputNames, Object[] inputValues, String[] outputNames, String script, String plotScript, boolean showIntermediateResults, boolean showWarnings) throws Exception

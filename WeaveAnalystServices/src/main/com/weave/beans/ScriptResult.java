@@ -1,8 +1,8 @@
 package com.weave.beans;
 
-import weave.beans.RResult;
-
 public class ScriptResult {
-	public RResult[] data;
+	public Object data;
+	
+	/* {dataLoatTime, dataComputationTime} */
 	public long[] times = new long[2];
 }
