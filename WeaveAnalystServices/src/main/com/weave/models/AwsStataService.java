@@ -8,6 +8,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.rmi.RemoteException;
 
+import org.apache.commons.io.FilenameUtils;
+
 import weave.utils.CSVParser;
 import weave.utils.CommandUtils;
 
@@ -36,7 +38,7 @@ public class AwsStataService implements IScriptEngine {
 		
 		try 
 		{
-			dataSetCSV = new File(tempDirectory.getAbsolutePath() + "data.csv");
+			dataSetCSV = new File(FilenameUtils.concat(tempDirectory.getAbsolutePath(), "data.csv"));
 			BufferedWriter out = new BufferedWriter(new FileWriter(dataSetCSV));
 			parser.createCSV(dataSet, true, out, true);
 			//jsonParser.toJson(dataSet, out);
@@ -96,7 +98,7 @@ public class AwsStataService implements IScriptEngine {
 		// Therefore if the log exists, the program did not terminate
 		
 		// remove extension .do extension and add .log
-		File logFile = new File(tempScriptFile.getAbsolutePath().substring(0, tempScriptFile.getAbsolutePath().lastIndexOf('.')).concat(".log"));
+		File logFile = new File(FilenameUtils.removeExtension(tempScriptFile.getAbsolutePath()).concat(".log"));
 		
 		// for now we assume result is always in result.csv
 		File scriptResult = new File(tempDirectory.getAbsolutePath() + "result.csv");
