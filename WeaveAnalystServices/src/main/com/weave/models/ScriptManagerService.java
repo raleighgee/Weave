@@ -14,39 +14,37 @@ import java.util.Map;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 
+import org.apache.commons.io.FilenameUtils;
+
 import weave.config.WeaveContextParams;
 import weave.servlets.WeaveServlet;
 
 import com.google.gson.Gson;
+import com.weave.config.AwsContextParams;
+import com.weave.utils.AWSUtils;
+import com.weave.utils.AWSUtils.SCRIPT_TYPE;
 
-public class ScriptManagerService extends WeaveServlet{
+public class ScriptManagerService {
 
-	private static final long serialVersionUID = 1L;
-	private static String awsConfigPath = "";
-	
 	public ScriptManagerService(){
 		
 	}
 	
-	public void init(ServletConfig config) throws ServletException {
-		super.init(config);
-		awsConfigPath = WeaveContextParams.getInstance(
-				config.getServletContext()).getConfigPath() + "/../aws-config/";
-	}
-	
-	
-	/**
-	 * Gives an object containing the script contents
-	 * 
-	 * @param scriptName
-	 * @return
-	 */
-	public static String getScript(Map<String, Object> params) throws Exception{
-    	File directory = new File(awsConfigPath, "RScripts");
+	 /**
+	  * 
+	  * Gives an object containing the script contents
+	  * 
+	  * @param scriptName
+	  * @return
+	  * @throws Exception
+	  */
+	 public static String getScript(File directory, String scriptName) throws Exception{
+		
 		String[] files = directory.list();
+		
 		String scriptContents = new String();
+		
 		BufferedReader bufr = null;
-		String scriptName = params.get("scriptName").toString(); 
 		
 		for (int i = 0; i < files.length; i++)
 		{
@@ -73,35 +71,42 @@ public class ScriptManagerService extends WeaveServlet{
 		return scriptContents;
     }
 
-	public static String[] getListOfScripts() {
+	/**
+	 * This function navigates all the given directories and return
+	 * All the script types
+	 * @param directories
+	 * @return
+	 */
+	public static String[] getListOfScripts(File[] directories) {
 
-		File directory = new File(awsConfigPath, "RScripts");
-		String[] files = directory.list();
-		List<String> rFiles = new ArrayList<String>();
-		String extension = "";
+		List<String> listOfScripts = new ArrayList<String>();
 
-		for (int i = 0; i < files.length; i++) {
-			extension = files[i].substring(files[i].lastIndexOf(".") + 1,
-					files[i].length());
-			if (extension.equalsIgnoreCase("r"))
-				rFiles.add(files[i]);
+		for(int i = 0; i < directories.length; i++)
+		{
+			File directory = directories[i];
+			String[] files = directory.list();
+			
+			for (int j = 0; j < files.length; j++) 
+			{
+				if(AWSUtils.getScriptType(files[j]) != AWSUtils.SCRIPT_TYPE.UNKNOWN)
+				{
+					listOfScripts.add(files[j]);
+				}
+			}
+
 		}
-		return rFiles.toArray(new String[rFiles.size()]);
+		return listOfScripts.toArray(new String[listOfScripts.size()]);
 	}
 
-	public static String saveMetadata(Map<String,Object>params) throws Exception {
-		String status = "";
-		String scriptName = params.get("scriptName").toString();
-		Object scriptMetadata = params.get("scriptMetadata");
-		if(scriptName.length() < 3){
-			return "The script Name is invalid";
-		}
+	public static void saveScriptMetadata(String scriptAbsName, Gson scriptMetadata) throws Exception {
 		
-		String jsonFileName = scriptName.substring(0, scriptName.lastIndexOf('.')).concat(".json");
-		File file = new File(awsConfigPath + "RScripts", jsonFileName);
+		// create json file name
+		String jsonFileName = FilenameUtils.removeExtension(scriptAbsName).concat(".json");
+	
+		File file = new File(jsonFileName);
+		
 		if (!file.exists()){
 			file.createNewFile();
-			//throw new RemoteException("Metadata file: " + jsonFileName + "does not exist");
 		}
 		
 		FileWriter fw = new FileWriter(file.getAbsolutePath());
@@ -109,15 +114,22 @@ public class ScriptManagerService extends WeaveServlet{
 		Gson gson = new Gson();
 		gson.toJson(scriptMetadata, bw);
 		bw.close();
-		
-		status = "success";
-		return status;
-	}
 
-	public static Object getScriptMetadata(Map<String,Object> params) throws Exception {
-		File directory = new File(awsConfigPath, "RScripts");
+		return;
+	}
+	
+	/**
+	 * 
+	 * @param directory The directory where the script is located
+	 * @param scriptName The script name relative
+	 * 
+	 * @return The script metadata in Gson format
+	 * @throws Exception
+	 */
+	public static Gson getScriptMetadata(File directory, String scriptName) throws Exception {
+		
 		String[] files = directory.list();
-		String scriptName = params.get("scriptName").toString();
+
 		int filecount = 0;
 		// this object will get the metadata from the json file
 		Object scriptMetadata = new Object();

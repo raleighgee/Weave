@@ -1,7 +1,16 @@
 package com.weave.utils;
 
+import java.rmi.RemoteException;
+
+import org.apache.commons.io.FilenameUtils;
+
 public class AWSUtils {
 
+	public enum SCRIPT_TYPE
+	{
+		STATA, R, UNKNOWN
+	}
+	
 	public enum OS_TYPE 
 	{
 		LINUX, OSX, WINDOWS, UNKNOWN
@@ -42,6 +51,27 @@ public class AWSUtils {
 		else
 		{
 			return OS_TYPE.UNKNOWN;
+		}
+	}
+	
+	public static SCRIPT_TYPE getScriptType(String scriptName)
+	{
+		String extension = FilenameUtils.getExtension(scriptName);
+
+		//Use R as the computation engine
+		if(extension.equalsIgnoreCase("R"))
+		{
+			return SCRIPT_TYPE.R;
+		}
+		
+		//Use STATA as the computation engine
+		if(extension.equalsIgnoreCase("do"))
+		{
+			return SCRIPT_TYPE.STATA;
+		}
+		else
+		{
+			return SCRIPT_TYPE.UNKNOWN;
 		}
 	}
 	

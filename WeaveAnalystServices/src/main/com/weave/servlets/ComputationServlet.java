@@ -7,8 +7,6 @@ import java.rmi.RemoteException;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 
-import org.apache.commons.io.FilenameUtils;
-
 import weave.config.WeaveContextParams;
 import weave.servlets.DataService;
 import weave.servlets.WeaveServlet;
@@ -20,6 +18,7 @@ import com.weave.interfaces.IScriptEngine;
 import com.weave.models.AwsRService;
 import com.weave.models.AwsStataService;
 import com.weave.utils.AWSUtils;
+import com.weave.utils.AWSUtils.SCRIPT_TYPE;
 
 public class ComputationServlet extends WeaveServlet implements IScriptEngine
 {	
@@ -37,8 +36,6 @@ public class ComputationServlet extends WeaveServlet implements IScriptEngine
 	
 	private static final long serialVersionUID = 1L;
 	
-	private static String R = "R";
-	private static String STATA = "STATA";
 	private String programPath = "";
 	private String tempDirPath = "";
 	public ScriptResult runScript(String scriptName, int[] ids, NestedColumnFilters filters) throws Exception
@@ -57,7 +54,7 @@ public class ComputationServlet extends WeaveServlet implements IScriptEngine
 			throw new RemoteException("Query produced no rows...");
 		}
 		
-		if(getScriptType(scriptName) == R)
+		if(AWSUtils.getScriptType(scriptName) == SCRIPT_TYPE.R)
 		{
 			// R requires the data as column data
 			Object[][] columnData = AWSUtils.transpose(recordData);
@@ -72,7 +69,7 @@ public class ComputationServlet extends WeaveServlet implements IScriptEngine
 			time2 = startTime - endTime;
 			
 		}
-		else if(getScriptType(scriptName) == STATA)
+		else if(AWSUtils.getScriptType(scriptName) == SCRIPT_TYPE.STATA)
 		{
 			endTime = System.currentTimeMillis(); // end timer for data request
 			
@@ -90,26 +87,5 @@ public class ComputationServlet extends WeaveServlet implements IScriptEngine
 		result.times[1] = time2;
 		
 		return result;
-	}
-	
-	private String getScriptType(String scriptName) throws Exception
-	{
-		String extension = FilenameUtils.getExtension(scriptName);
-
-		//Use R as the computation engine
-		if(extension.equalsIgnoreCase("R"))
-		{
-			return R;
-		}
-		
-		//Use STATA as the computation engine
-		if(extension.equalsIgnoreCase("do"))
-		{
-			return STATA;
-		}
-		else
-		{
-			throw new RemoteException("Unsupported script type");
-		}
 	}
 }
