@@ -6,7 +6,6 @@ goog.require('aws');
  * Don't worry, it will be possible to manage more than one query object in the
  * future.
  */
-
 var dataServiceURL = '/WeaveServices/DataService';
 
 var computationServiceURL = '/WeaveAnalystServices/ComputationalServlet';
@@ -393,16 +392,17 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
         	}
         };
         
-        this.updateEntity = function(user, password, entityId, diff) {
+        this.authenticate = function(user, password) {
 
         	var deferred = $q.defer();
             
-            aws.AdminClient.updateEntity(user, password, entityId, diff, function(){
+            aws.AdminClient.updateEntity(user, password, function(result){
                 
             	scope.$apply(function(){
-                    deferred.resolve();
+                    deferred.resolve(result);
                 });
             });
+            
             return deferred.promise;
         };
         

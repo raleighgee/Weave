@@ -4,14 +4,14 @@
     <property file="${netbeans.user}/build.properties" />
     <property name="workspace_loc" value="${var.workspace_loc}"/>
 	<property file="${workspace_loc}/.metadata/.plugins/org.eclipse.core.runtime/.settings/org.eclipse.core.resources.prefs"/>
-	
+
 	<!--<property name="docroot" value="/Library/Tomcat/webapps/ROOT" />-->
 	<property name="docroot" value="${pathvariable.WEAVE_DOCROOT}" />
 	<property name="build-dir" value="${basedir}/build" />
 	<property name="dist-dir" value="${docroot}/aws"/>
 	<property name="src-dir" value="${basedir}/src"/>
 	<property name="app-dir" value="${basedir}/app"/>
-	
+
 	<taskdef name="jscomp" classpath="${basedir}/lib/compiler.jar" classname="com.google.javascript.jscomp.ant.CompileTask"/>
 
 	<target name="all" depends="clean, compile, app, dist">
@@ -34,7 +34,7 @@
         </fileset> 
       </delete>
     </target>
-	
+
 	<target name="compile">
 		<!--
 			Using the <path> element allows us to specify wildcards for the jscomp command.
@@ -49,9 +49,9 @@
 			</path>
 		    <map from="${src-dir}/" to=""/>
 		</pathconvert>
-		
+
 		<echo>${aws.js.files}</echo>
-		
+
 		<!-- jscomp: google closure compiler command -->
 		<jscomp
 		    	compilationLevel="simple"
@@ -61,7 +61,7 @@
 		        sourceMapOutputFile="${build-dir}/aws-source-map.json"
 		        sourceMapFormat="V3"
 		        output="${build-dir}/aws.js">
-			
+
 			<externs dir="${basedir}/externs">
 				<file name="jquery-1.9.js"/>
 				<file name="myexterns.js"/>
@@ -69,9 +69,9 @@
 			</externs>
 
 <!-- 			<path refid="${test.dir}"/> -->
-			
+
 			<sources dir="${src-dir}" files="${aws.js.files}" />
-			
+
 			<sources dir="${src-dir}">
 			    <file name="goog/base.js"/>
 			</sources>
@@ -82,15 +82,15 @@
 <!-- 			</sources> -->
 
 		</jscomp>
-		
+
 		<!-- TEMPORARY SOLUTION - copy all files to build folder -->
 		<copy todir="${build-dir}">
 			<fileset dir="${src-dir}"/>
 		</copy>
 <!-- 		<copy todir="${build-dir}" file="${src-dir}/test.html"/> -->
-		
+
 	</target>
-	
+
 	<target name="app">
 		<!-- TEMPORARY SOLUTION - copy all files to build folder -->
 		<copy todir="${build-dir}">
@@ -124,7 +124,7 @@
 	<macrodef name="compile-soy">
 		<attribute name="file"/>
 		<sequential>
-		    
+
 			<java jar="${basedir}/lib/SoyToJsSrcCompiler.jar" fork="true" failonerror="true">
 		    	<arg value="--outputPathFormat"/>
 		    	<arg value="${basedir}/generated/{file}.js"/>

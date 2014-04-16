@@ -168,8 +168,8 @@ angular.module('aws.configure.metadata', []).controller("MetadataManagerCtrl", f
             							}
             						}
     	        					if(id) {
-    	        						queryService.updateEntity("mysql", 
-    	        								"pass", 
+    	        						queryService.updateEntity($scope.user, 
+    	        								$scope.password, 
     	        								 id, { 
     	        															publicMetadata : { 
     	        																				aws_metadata : metadata.replace(/\s/g, '')
@@ -194,6 +194,21 @@ angular.module('aws.configure.metadata', []).controller("MetadataManagerCtrl", f
           
 	$scope.importQueryObject = function() {
 	
+	};
+	
+	$scope.authenticate = function()
+	{
+		queryService.authenticate($scope.user, $scope.password).then(function(result) {
+			if(result)
+			{
+				$scope.authenticated = true;
+			}
+			else
+			{
+				$scope.authenticated = false;
+			}
+		
+		});
 	};
 		
 	var cmp = function(a, b) {

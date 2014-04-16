@@ -3,7 +3,6 @@ package com.weave.servlets;
 import static weave.config.WeaveConfig.initWeaveConfig;
 
 import java.io.File;
-import java.util.Map;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;

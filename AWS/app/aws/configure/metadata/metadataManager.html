@@ -1,5 +1,13 @@
 <div style="padding-left: 25px">
-	<table>
+
+<div ng-show="!authenticated">
+	
+	 User Name: <input type="text" ng-model="user"/> 
+	 Password: <input type="password" ng-model="password"/>
+	<input type="button" ng-click="authenticate()"/>
+</div>
+
+<table ng-show="authenticated">
   <colgroup width="100%">
     <col width="50%" valign="top">
     <col width="50%">
@@ -28,5 +36,5 @@
        <input type="button" value="Delete" ng-click="removeRow()">
     </td>
   </tr>
-  </table>	
+</table>	
 </div>

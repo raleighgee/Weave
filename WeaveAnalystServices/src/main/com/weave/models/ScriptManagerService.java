@@ -9,23 +9,12 @@ import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
 
 import org.apache.commons.io.FilenameUtils;
 
-import weave.config.WeaveContextParams;
-import weave.servlets.AdminService;
-import weave.servlets.WeaveServlet;
-
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.weave.config.AwsContextParams;
 import com.weave.utils.AWSUtils;
-import com.weave.utils.AWSUtils.SCRIPT_TYPE;
 
 public class ScriptManagerService {
 
