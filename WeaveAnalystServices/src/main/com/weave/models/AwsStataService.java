@@ -53,6 +53,7 @@ public class AwsStataService implements IScriptEngine {
 		
 		try 
 		{
+			// TODO set up the csv variables name
 			tempScript += "insheet using " + dataSetCSV.getAbsolutePath() + ", clear \n" +
 					"noisily do " + scriptAbsPath;
 			
