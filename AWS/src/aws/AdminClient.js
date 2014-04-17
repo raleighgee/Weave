@@ -24,6 +24,6 @@ aws.AdminClient.updateEntity = function(user, password, entityId, diff, handleRe
  * 
  * @param {function() : boolean} handleResult
  */
-aws.AdminClient.updateEntity = function(user, password, entityId, diff, handleResult) {
+aws.AdminClient.authenticate = function(user, password, handleResult) {
 	aws.queryService(adminServiceURL, "authenticate", [user, password], handleResult);
 };

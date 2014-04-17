@@ -1,13 +1,13 @@
 <div style="padding-left: 25px">
 
-<div ng-show="!authenticated">
+<div ng-if="!authenticated">
 	
 	 User Name: <input type="text" ng-model="user"/> 
 	 Password: <input type="password" ng-model="password"/>
 	<input type="button" ng-click="authenticate()"/>
 </div>
 
-<table ng-show="authenticated">
+<table ng-if="authenticated">
   <colgroup width="100%">
     <col width="50%" valign="top">
     <col width="50%">

@@ -1,5 +1,5 @@
 'use strict';
-goog.require('aws');
+//goog.require('aws');
 /**
  * Query Object Service provides access to the main "singleton" query object.
  *
@@ -393,10 +393,11 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
         };
         
         this.authenticate = function(user, password) {
-
+        	console.log(user);
+        	console.log(password);
         	var deferred = $q.defer();
             
-            aws.AdminClient.updateEntity(user, password, function(result){
+            aws.AdminClient.authenticate(user, password, function(result){
                 
             	scope.$apply(function(){
                     deferred.resolve(result);

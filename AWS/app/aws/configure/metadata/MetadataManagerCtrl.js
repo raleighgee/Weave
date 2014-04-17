@@ -1,5 +1,6 @@
 angular.module('aws.configure.metadata', []).controller("MetadataManagerCtrl", function($scope, queryService){			
-	
+	$scope.user = "mysql";
+	$scope.password = "pass";
 	var treeData = [];
 	$scope.myData = [];
 	$scope.maxTasks = 100;
@@ -7,6 +8,21 @@ angular.module('aws.configure.metadata', []).controller("MetadataManagerCtrl", f
 	$scope.selectedColumnId;
     $scope.fileUpload;
 	
+    $scope.authenticate = function()
+	{
+		queryService.authenticate($scope.user, $scope.password).then(function(result) {
+			if(result)
+			{
+				$scope.authenticated = true;
+			}
+			else 
+			{
+				$scope.authenticated = false;
+			}
+		
+		});
+	};
+    
 	var generateTree = function() {
 		queryService.getDataTableList().then(function(dataTableList) {
 			for (var i = 0; i < dataTableList.length; i++) {
@@ -194,21 +210,6 @@ angular.module('aws.configure.metadata', []).controller("MetadataManagerCtrl", f
           
 	$scope.importQueryObject = function() {
 	
-	};
-	
-	$scope.authenticate = function()
-	{
-		queryService.authenticate($scope.user, $scope.password).then(function(result) {
-			if(result)
-			{
-				$scope.authenticated = true;
-			}
-			else
-			{
-				$scope.authenticated = false;
-			}
-		
-		});
 	};
 		
 	var cmp = function(a, b) {
