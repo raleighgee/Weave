@@ -25,8 +25,7 @@ import java.sql.SQLException;
 import java.util.LinkedList;
 
 /**
- * This is a lightweight object that holds the data in a 2D Array from a ResultSet.
- * The column names and their corresponding type are stored in an array (columnNames and columnTypes respectively)
+ * This is a lightweight object that holds the data from a ResultSet.
  * 
  * @author Andy Dufilie
  */

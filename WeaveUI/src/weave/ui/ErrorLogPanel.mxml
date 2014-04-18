@@ -82,6 +82,21 @@
 			
 			private function initSubMenu():void
 			{
+				enableSubMenu.value = true;
+				subMenu.addSubMenuItem(
+					function():String {
+						return Identify.enabled
+							? "Stop identifying UI components"
+							: "Identify UI components";
+					},
+					Identify.identify
+				);
+				subMenu.addSubMenuItem(
+					"Print display list",
+					function():void {
+						weaveTrace(DebugUtils.debugDisplayList(stage));
+					}
+				);
 				var allMenuToggles:Array = [
 					Weave.properties.enableRightClick,
 					Weave.properties.enableMenuBar,
@@ -95,42 +110,25 @@
 					Weave.properties.enableToolControls,
 					Weave.properties.showSessionHistoryControls
 				];
-				enableSubMenu.value = true;
-				subMenu.menuItems.push(
-					new SubMenuItem(
-						function():String {
-							return Identify.enabled
-								? "Stop identifying UI components"
-								: "Identify UI components";
-						},
-						Identify.identify
-					),
-					new SubMenuItem(
-						"Print display list",
-						function():void {
-							weaveTrace(DebugUtils.debugDisplayList(stage));
-						}
-					),
-					new SubMenuItem(
-						"Show all menus and controls",
-						function():void {
-							for each (var lb:LinkableBoolean in allMenuToggles)
+				subMenu.addSubMenuItem(
+					"Show all menus and controls",
+					function():void {
+						for each (var lb:LinkableBoolean in allMenuToggles)
+							lb.value = true;
+						for each (var dp:DraggablePanel in WeaveAPI.globalHashMap.getObjects(DraggablePanel))
+							for each (lb in [dp.enableBorders, dp.enableMoveResize, dp.enableZOrder, dp.minimizable, dp.maximizable, dp.closeable])
 								lb.value = true;
-							for each (var dp:DraggablePanel in WeaveAPI.globalHashMap.getObjects(DraggablePanel))
-								for each (lb in [dp.enableBorders, dp.enableMoveResize, dp.enableZOrder, dp.minimizable, dp.maximizable, dp.closeable])
-									lb.value = true;
-						},
-						null,
-						function():Boolean {
-							for each (var lb:LinkableBoolean in allMenuToggles)
-								if (!lb.value)
-									return true;
-							return false;
-						}
-					),
-					new SubMenuItem("Clear log", console.consoleClear),
-					new SubMenuItem("Console help", function():void { help.showHelp(); })
+					},
+					null,
+					function():Boolean {
+						for each (var lb:LinkableBoolean in allMenuToggles)
+							if (!lb.value)
+								return true;
+						return false;
+					}
 				);
+				subMenu.addSubMenuItem("Clear log", console.consoleClear);
+				subMenu.addSubMenuItem("Console help", function():void { help.showHelp(); });
 			}
 			
 			override protected function childrenCreated():void

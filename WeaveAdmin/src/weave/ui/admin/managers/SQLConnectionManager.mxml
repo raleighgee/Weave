@@ -165,8 +165,6 @@
 			public function handleConnectionNames(names:Array):void
 			{
 				treeWithSearch.generateFlatTreeFromLabels(names);
-				if(!names)
-					return;
 				if (names.length == 0)
 				{
 					superuserCheckbox.selected = true;
@@ -241,8 +239,6 @@
 			
 			protected function clearConnectionFields(resetConnectString:Boolean):void
 			{
-				if (resetConnectString)
-					treeWithSearch.tree.selectedItem = null;
 				connectionNameInput.text = "";
 				connectionPasswordInput.text = "";
 				folderNameInput.text = "";

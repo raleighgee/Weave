@@ -1,1 +1,9 @@
 tags
+.DS_Store
+.idea/
+.metadata/
+.tern-project
+.index
+.snap
+.data
+.tmp

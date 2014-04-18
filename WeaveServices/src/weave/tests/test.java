@@ -20,19 +20,25 @@ package weave.tests;
 
 
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import weave.beans.RResult;
+import weave.servlets.AWSRService;
 import weave.servlets.RService;
 
 public class test
 {
 
 	static RService ws = null;
+	static AWSRService aws= null;
 	
-//	public static void call(String[] inputNames, Object[][] inputValues,  
-//			 boolean showWarnings, int clusternumber, int iterationNumber) throws Exception{
-	
+	public static Map<String, String> connectionObject = new HashMap<String, String>();
+	public static Map<String, Object> requestObject = new HashMap<String, Object>();
+
+		
 	public static void call(String[] keys, String[]inputNames, Object[]inputValues, String[]resultNames, String script, String plotScript, boolean showIntermediateResults, boolean showWarnings, boolean useColumnAsList)
 	throws Exception
 	{
@@ -46,10 +52,7 @@ public class test
 				
 				System.out.println(System.getProperty("user.dir"));
 			try {
-				//scriptResult =	ws.kMeansClustering(inputNames, inputValues, showWarnings,clusterNo, iterations);
-				//scriptResult = ws.handlingMissingData(inputNames, inputValues, outputNames, false, false, false);
-				//scriptResult = ws.kMeansClustering(inputNames, inputValues, false, 3, 10);
-				//scriptResult = ws.computingTStatisticforClassDiscrimination(inputNames, inputValues, resultNames, parameters);
+				
 				scriptResult = ws.runScript(null, inputNames, inputValues, resultNames, script, plotScript, showIntermediateResults, showWarnings, useColumnAsList);
 				} catch (RemoteException e) {
 					e.printStackTrace();
@@ -62,35 +65,115 @@ public class test
 	    }
 	}
 	
+	
 
 	public static void main(String[] args) throws Exception
 	{
 		ws = new RService();
-		String[] inputNames = {};
+		aws = new AWSRService();
+		
+		
+//		HashMap<String, Object> algorithmObject = new HashMap<String, Object>();
+//		algorithmObject.put("startClusterNumber", 4);
+//		algorithmObject.put("stopClusterNumber", 10);
+//		algorithmObject.put("ClusterInterval", 2);
+//		algorithmObject.put("startIterationsNumber", 1000);
+//		algorithmObject.put("stopIterationsNumber", 10000);
+//		algorithmObject.put("iterationsInterval", 500);
+//		
+		
+		
+		ArrayList<String> columns = new ArrayList<String>();
+		columns.add("X_STATE");
+		columns.add("X_PSU");
+		columns.add("X_FINALWT");
+		columns.add("X_STSTR");
+		columns.add("DIABETE2");
+		
+//		columns.add("PercentObese2002");
+//		columns.add("PercentObese2003");
+//		columns.add("PercentObese2004");
+//		columns.add("PercentObese2005");
+//		columns.add("PercentObese2006");
+		
+		connectionObject.put("connectionType", "RODBC");
+		connectionObject.put("user", "root");
+		connectionObject.put("password", "shweta");
+		connectionObject.put("schema", "data");
+		connectionObject.put("host", "localhost");
+		connectionObject.put("dsn", "myCDC");
+		
+		requestObject.put("scriptName", "TestingAWS_RODBC.R");
+		requestObject.put("scriptPath", "C:\\RScripts\\");
+		requestObject.put("columnsToBeRetrieved",columns);
+		requestObject.put("dataset", "sdoh2010q");
+		
+		//Object[] array1 = {10,10,20,30,22,50,60,55,89,33,44,54,21};
+		//Object[] array2 = {10,20,44,52,34,87,45,65,76,87,23,12,34};
+		//Object[] myMatrix = new Object[]{array1, array2};
+		//String scriptPath = "C:\\RScripts\\TestingAWS_RODBC.R";
+		//String [] inputNames = {"cannedScriptPath", "params"};
+		//Object[] inputValues = new Object[0];
+		//Object[] inputValues = {scriptPath, columns };
+		
+		//String script = "scriptFromFile <- source(cannedScriptPath)\n" +
+		 //"returnedColumns <- scriptFromFile$value(dataMatrix)\n";
+		//String[] resultNames = {};
+		
+		
+		
+		//call(null, inputNames, inputValues, resultNames, script, "", false, false, false);
+		
+		
+		
 		//Object[] inputValues1 = {};	
 		//Object[] inputValues = {};
-		String plotscript = "";
-//		String script = "";		
-		String script1 = "";
+		//String plotscript = "";
 		//Object[] parameters = {};
-		String [] resultNames = {};	
-		String scriptFilePath = "C:\\Users\\Shweta\\Desktop\\Rtest.R";
-		String csvPath = "C:\\Users\\Shweta\\Desktop\\SDoH2010Q.csv";
+		//String [] resultNames = {};	
+		//String scriptFilePath = "C:\\RScripts\\TestingAWS_RODBC.R";
+		//String csvPath = "C:\\Users\\Shweta\\Desktop\\SDoH2010Q.csv";
+//		String user = "root";
+//		String password = "shweta";
+//		String hostName = "localhost";
+//		String schemaName = "data";
+//		String dsn = "myCDC";
+	//	String [] columns = {"X_STATE", "X_PSU", "X_STSTR", "X_FINALWT", "DIABETE2"};
+		//String query = "select `X_STATE`,`X_PSU`,`X_STSTR`,`X_FINALWT`,DIABETE2 from sdoh2010q";
 		
+//		 Object[] inputValues = {scriptFilePath, query, columns, user, password, hostName, schemaName, dsn};
+//		 String[] inputNames = {"cannedScriptPath", "query", "params", "myuser", "mypassword", "myhostName", "myschemaName", "mydsn"};
+//		
+//		String script =  "scriptFromFile <- source(cannedScriptPath)\n" +
+//		  "library(RMySQL)\n" +
+//		  "con <- dbConnect(dbDriver(\"MySQL\"), user = myuser , password = mypassword, host = myhostName, port = 3306, dbname =myschemaName)\n" +
+//		  "library(survey)\n" +
+//		  "getColumns <- function(query)\n" +
+//		  "{\n" +
+//		  "return(dbGetQuery(con, paste(query)))\n" +
+//		  "}\n" +
+//		  "returnedColumnsFromSQL <- scriptFromFile$value(query, params)\n";
+		
+			//String[] inputNames  = {"cannedScriptPath","query", "mystate", "mypsu","myststr","myfinalwt", "myindicator"};
+		//Object[] inputValues = {checkstrings};
 //		Object[] array1 = {0,10,20,30,22,50,60,55,89,33,44,54,21};
 //		Object[] array2 = {10,20,44,52,34,87,45,65,76,87,23,12,34};
 //		Object[] array3 = {10,20,44,52,34,87,45,65,76,87,23,12,34};
-		Object[]inputValues1 = {scriptFilePath, csvPath};
-		inputNames = new String[]{"scriptPath", "csvPath"};
-		
+		//String []inputValues1 = {scriptFilePath,query,mystate, mypsu,myststr, myfinalwt,myindicator};
+		//inputNames = new String[]{"scriptPath", "csvPath"};
 		//works
 //		script = "scriptFromFile <- source(scriptPath)\n" +
 //				"answer <- scriptFromFile$value(col1, col2)\n";
 		
 		//testing
-		script1 = "scriptFromFile <- source(scriptPath)\n" +
-				"library(survey)\n" +
-				"runscript <- scriptFromFile$value(csvPath)\n";
+//		script1 ="params <- c(mystate, mypsu, myststr, myfinalwt, myindicator)\n" +
+//		"scriptFromFile <- source(cannedScriptPath)\n" +
+//		"library(RMySQL)\n" +
+//		"con <- dbConnect(dbDriver(\"MySQL\"), user = \"root\", password = \"shweta\", host = \"localhost\", port = 3306, dbname = \"data\")\n" +
+//		"library(survey)\n" +
+//		"returnedColumnsFromSQL <- scriptFromFile$value(query,params)\n";
+		
+		
 		
 		//inputValues1 = new Object[0];
 		//inputNames = new String[]{"myMatrix"};
@@ -154,8 +237,8 @@ public class test
 //		"return(Clusters)}}\n" +
 //		"ans <- hello1(inputColumns, EMModel)\n";
 		
-		resultNames = new String[]{"runscript"};
-		call(null,inputNames, inputValues1,resultNames,script1,plotscript, false,false,false);
+			
+//		
 	}	
 }		
 		

@@ -1,0 +1,40 @@
+<div style="padding-left: 25px">
+
+<div ng-if="!authenticated">
+	
+	 User Name: <input type="text" ng-model="user"/> 
+	 Password: <input type="password" ng-model="password"/>
+	<input type="button" ng-click="authenticate()"/>
+</div>
+
+<table ng-if="authenticated">
+  <colgroup width="100%">
+    <col width="50%" valign="top">
+    <col width="50%">
+  </colgroup>
+  <tr>
+    <td valign="top">
+      <br>
+		<b> Data Tables </b>
+	  <br>
+      <div id="tree"style="width: 100%; height: 600px; overflow: scroll"></div>
+      <br>
+      <input class="file-nput-btn" type="button" value="Refresh" ng-click="refresh()">
+      <file-upload label="Upload"></file-upload>
+	  <br><br>
+	  <div ng-show="inProgress" style="width: 175px">
+	      <progressbar value="progressValue" max="maxTasks" animate="false"></progressbar>
+	  </div>
+    </td>
+    <td valign="top">
+    	<br>
+		<b> Id : {{selectedColumnId}} </b>
+  		<div class="gridStyle" ng-grid="gridOptions"></div>
+        <div class="selectedItems">{{mySelections}}</div>
+       <br>
+       <input type="button" value="Add" ng-click="addNewRow()">
+       <input type="button" value="Delete" ng-click="removeRow()">
+    </td>
+  </tr>
+</table>	
+</div>

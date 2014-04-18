@@ -450,7 +450,7 @@ public class CSVParser
 			for (String field : record.keySet())
 				if (includeNullFields || record.get(field) != null)
 					hashmap.put(field, true);
-		return hashmap.keySet().toArray(new String[0]);
+		return (String[])hashmap.keySet().toArray();
 	}
 	
 	/**

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" id="WebApp_ID" version="2.5">
+  <display-name>WeaveAnalystServices</display-name>
+  
+  <servlet>
+    <servlet-name>ComputationalServlet</servlet-name>
+    <servlet-class>com.weave.servlets.ComputationalServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>ComputationalServlet</servlet-name>
+    <url-pattern>/ComputationalServlet</url-pattern>
+  </servlet-mapping>
+
+  <servlet>
+    <servlet-name>ScriptManagementServlet</servlet-name>
+    <servlet-class>com.weave.servlets.ScriptManagementServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>ScriptManagementServlet</servlet-name>
+    <url-pattern>/ScriptManagementServlet</url-pattern>
+  </servlet-mapping>
+
+
+</web-app>

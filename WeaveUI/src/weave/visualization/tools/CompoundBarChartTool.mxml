@@ -168,7 +168,6 @@
 			public function get heightColumns():ILinkableHashMap { return _plotter.heightColumns; }
 			public function get chartColors():ColorRamp { return _plotter.chartColors; }
 			
-			public function get plotter():CompoundBarChartPlotter {return _plotter;}
 			[Deprecated] public function set includeToolAttributesInProbe(value:Boolean):void
 			{
 				handleSelectAllAttrInProbe(value);
@@ -409,13 +408,12 @@
 				if (_plotter.heightColumns.getObjects().length < 1)
 					return;
 
-				var columns:Array;
 				if (linkHeightAndColorColumns.value)
 				{
 					_plotter.heightColumns.delayCallbacks();
 					
 					ColumnUtils.forceFirstColumnDynamic(_plotter.heightColumns);
-					columns = _plotter.heightColumns.getObjects();
+					var columns:Array = _plotter.heightColumns.getObjects();
 					copySessionState(columns[0], ColumnUtils.hack_findInternalDynamicColumn(_plotter.colorColumn));
 					
 					_plotter.heightColumns.resumeCallbacks();
@@ -425,7 +423,7 @@
 					_plotter.heightColumns.delayCallbacks();
 					
 					ColumnUtils.forceFirstColumnDynamic(_plotter.heightColumns);
-					columns = _plotter.heightColumns.getObjects();
+					var columns:Array = _plotter.heightColumns.getObjects();
 					copySessionState(columns[0], _plotter.sortColumn);
 					
 					_plotter.heightColumns.resumeCallbacks();
