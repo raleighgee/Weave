@@ -77,7 +77,7 @@ function($filter, queryService) {
 		var widget_id = element_id;
 		var widget_brick_found = $filter('filter')(widget_bricks, {
 			id : widget_id
-		})
+		});
 		if (widget_brick_found.length == 0) {
 			var tool = $filter('filter')(tool_list, {
 				id : widget_id

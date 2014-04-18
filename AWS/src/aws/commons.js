@@ -2,6 +2,10 @@ goog.provide('aws');
 goog.exportSymbol('aws', aws);
 
 /**
+ * @type {string} timeLogString the time log string.
+ */
+aws.errorReport = "";
+/**
  * 
  * @type {string} timeLogString the time log string.
  */
@@ -125,10 +129,9 @@ aws.queryService = function(url, method, params, resultHandler, queryId)
     	
     	// parse result for target window to use correct Array implementation
     	response = targetWindow.JSON.parse(response);
-    	
         if (response.error)
         {
-        	console.log(JSON.stringify(response, null, 3));
+        	aws.errorReport = response.error.message;
         }
         else if (resultHandler){
             return resultHandler(response.result, queryId);

@@ -222,7 +222,7 @@ analysis_mod.controller("ScriptsBarController", function($scope, queryService) {
 					});
 					var aws_metadata = angular.fromJson(column.publicMetadata.aws_metadata);
 					if (aws_metadata.hasOwnProperty("columnType")) {
-						load_flag = true
+						load_flag = true;
 						var key = aws_metadata.columnType;
 						if (!orderedColumns.hasOwnProperty(key)) {
 							orderedColumns[key] = [{

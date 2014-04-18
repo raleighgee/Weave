@@ -27,3 +27,24 @@ QueryObject.controller("RunQueryCtrl_2", function($scope, queryService) {
 			}
 		};
 });
+
+QueryObject.controller("ErrorLogCtrl", function($scope) {
+	
+	
+	$scope.alerts;
+
+    $scope.$watch(function() {
+		return aws.errorReport;
+	}, function() {
+		if(aws.errorReport == "") {
+		
+		} else {
+			if($scope.alerts != undefined) {
+				$scope.alerts.unshift({ type : 'danger', msg: aws.errorReport});
+			} else {
+				$scope.alerts = [{ type : 'danger', msg: aws.errorReport}];
+			}
+		}
+		aws.errorReport = ""; // we do this so next time around the message is guaranteed to be different
+	});
+});

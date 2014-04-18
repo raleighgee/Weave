@@ -93,7 +93,7 @@
 						</ul>-->
 					</div><!-- /.navbar-collapse -->
 				</nav>
-
+				
 			</header>
 
 			<div style="height: 100%" class = "tab-container" >
@@ -102,13 +102,26 @@
 				</div>
 
 			</div>
+			
 			<footer>
 				<p>
 
 				</p>
 			</footer>
 		</div>
-
+		<div ng-controller="ErrorLogCtrl" style="width: 80%">
+			<div ng-repeat="alert in alerts"> 
+	  			<div class="alert alert-danger alert-dismissable">
+	  				<button type="button" class="close" data-dismiss="alert" aria-hidden="true">
+	  					x
+	  				</button>
+	  				<strong>
+	  					Error:
+	  				</strong>
+	  				{{alert.msg}}
+	  			</div>
+			</div>
+		</div>
 		<!-- JQuery Libraries -->
 		<script src="lib/jquery/jquery 2_1_0.js"></script>
 		<script src='lib/jquery-ui/jquery-ui.js'></script>

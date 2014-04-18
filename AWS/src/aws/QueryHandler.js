@@ -31,7 +31,7 @@ aws.QueryHandler = function(queryObject)
 		if (queryObject.scriptSelected != "") {
 			this.rRequestObject.scriptName = queryObject.scriptSelected;
 		} else {
-			console.log("no script selected");
+			aws.errorLog = "no script selected";
 		}
 	}
 	
@@ -39,7 +39,7 @@ aws.QueryHandler = function(queryObject)
 		if (queryObject.projectSelected != "") {
 			this.rRequestObject.projectName = queryObject.projectSelected;
 		} else {
-			console.log("no project selected");
+			aws.errorLog = "no project selected";
 		}
 	}
 	
@@ -153,7 +153,7 @@ aws.QueryHandler = function(queryObject)
 		this.rRequestObject.filters = nestedFilterRequest;
 	}
 	
-	console.log(angular.toJson(this.rRequestObject));
+	aws.errorLog = angular.toJson(this.rRequestObject);
 	
 	this.keyType = "";
 	

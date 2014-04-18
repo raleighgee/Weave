@@ -1,6 +1,5 @@
 angular.module('aws.configure.metadata', []).controller("MetadataManagerCtrl", function($scope, queryService){			
-	$scope.user = "mysql";
-	$scope.password = "pass";
+	
 	var treeData = [];
 	$scope.myData = [];
 	$scope.maxTasks = 100;
@@ -8,9 +7,9 @@ angular.module('aws.configure.metadata', []).controller("MetadataManagerCtrl", f
 	$scope.selectedColumnId;
     $scope.fileUpload;
 	
-    $scope.authenticate = function()
+    $scope.authenticate = function(user, password)
 	{
-		queryService.authenticate($scope.user, $scope.password).then(function(result) {
+		queryService.authenticate(user, password).then(function(result) {
 			if(result)
 			{
 				$scope.authenticated = true;
@@ -21,6 +20,11 @@ angular.module('aws.configure.metadata', []).controller("MetadataManagerCtrl", f
 			}
 		
 		});
+	};
+	
+	$scope.logout = function()
+	{
+		$scope.authenticated = false;
 	};
     
 	var generateTree = function() {
@@ -55,7 +59,7 @@ angular.module('aws.configure.metadata', []).controller("MetadataManagerCtrl", f
 								debugLevel: 0
 							});
 							var node = $("#tree").dynatree("getRoot");
-						     node.sortChildren(cmp, true);
+						    // node.sortChildren(cmp, true);
 						}
 					});
 				})(treeNode, i, dataTableList.length);
@@ -64,7 +68,13 @@ angular.module('aws.configure.metadata', []).controller("MetadataManagerCtrl", f
 	};
 	
 	generateTree();
-
+	
+	var cmp = function(a, b) {
+		key1 = a.data.key;
+		key2 = b.data.key;
+		return key1 > key2 ? 1 : key1 < key2 ? -1 : 0;
+	};
+	
 	var getColumnMetadata = function (id) {
 		aws.DataClient.getDataColumnEntities(id, function(result) {
 			var metadata = result[0];
@@ -143,8 +153,8 @@ angular.module('aws.configure.metadata', []).controller("MetadataManagerCtrl", f
 	 
 	 var updateMetadata = function(metadata) {
 		 var jsonaws_metadata = angular.toJson(convertToMetadataFormat(metadata));
-		 queryService.updateEntity("mysql", 
-			"pass", 
+		 queryService.updateEntity($scope.user, 
+			$scope.password, 
 			$scope.selectedColumnId, { 
 										publicMetadata : { 
 															aws_metadata : jsonaws_metadata 
@@ -210,11 +220,5 @@ angular.module('aws.configure.metadata', []).controller("MetadataManagerCtrl", f
           
 	$scope.importQueryObject = function() {
 	
-	};
-		
-	var cmp = function(a, b) {
-		a = a.data.key;
-		b = b.data.key;
-		return a > b ? 1 : a < b ? -1 : 0;
 	};
 });

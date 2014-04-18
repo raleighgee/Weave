@@ -393,8 +393,7 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
         };
         
         this.authenticate = function(user, password) {
-        	console.log(user);
-        	console.log(password);
+
         	var deferred = $q.defer();
             
             aws.AdminClient.authenticate(user, password, function(result){
