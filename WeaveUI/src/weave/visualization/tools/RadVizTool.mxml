@@ -248,7 +248,6 @@ along with Weave.  If not, see <http://www.gnu.org/licenses/>.
 					registerLinkableChild(normalizedColumnsGroup, col);
 				}
 				//normalizedColumnsGroup.addImmediateCallback(this, classDiscriminatorColumnUpdate);
-				
 			}
 			
 			private function handleRunScriptFault(event:FaultEvent, token:Object = null):void

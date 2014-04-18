@@ -372,6 +372,7 @@ public class RServiceUsingRserve
 			
 			REXP evalValue = rConnection.eval("normalized");
 			result = rexp2javaObj(evalValue);
+		
 		}
 		catch (Exception e)
 		{

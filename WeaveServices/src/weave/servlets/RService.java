@@ -198,6 +198,10 @@ public class RService extends WeaveServlet
 		return RServiceUsingRserve.normalize(docrootPath, array);
 	}
 
+	public Object normalize(Object[][] data) throws RemoteException
+	{
+		return RServiceUsingRserve.normalize(docrootPath, data);
+	}
 	public RResult[] kMeansClustering(String[] inputNames, Object[][] inputValues, boolean showWarnings,int numberOfClusters, int iterations) throws Exception
 	{
 		
