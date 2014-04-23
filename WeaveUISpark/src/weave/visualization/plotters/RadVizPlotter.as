@@ -59,7 +59,6 @@ package weave.visualization.plotters
 	import weave.data.AttributeColumns.AlwaysDefinedColumn;
 	import weave.data.AttributeColumns.DynamicColumn;
 	import weave.data.AttributeColumns.NumberColumn;
-	import weave.data.ColumnReferences.HierarchyColumnReference;
 	import weave.data.DataSources.CSVDataSource;
 	import weave.data.KeySets.KeySet;
 	import weave.primitives.Bounds2D;
