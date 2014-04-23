@@ -4,9 +4,7 @@ angular.module('aws.project', [])
 	$scope.currentProjectSelected = "";//used as flag for keeping track of projects deleted
 	
 	$scope.listOfProjects =[];
-	//$scope.listOfProjects = queryService.getListOfProjects();//fetches for Drop down
 	queryService.getListOfProjectsfromDatabase();
-	$scope.queryObjectJson = "";
 	
 	$scope.listItems = [];//list of returned JSON Objects 
 	$scope.currentQuerySelected = {};//current query Selected by the user for loading/running/deleting etc
@@ -15,7 +13,7 @@ angular.module('aws.project', [])
 	$scope.insertQueryObjectStatus = 0;//count changes when single queryObject or multiple are added to the database
 	$scope.columnString= "";//string that displays the by-variables in the 'Columns:' section of each list item 
 	var nameOfQueryToDelete = "";
-	//external directives
+	//external aside directives
 	$scope.aside = {
 			title : 'Query Object Editor'
 			
@@ -28,16 +26,15 @@ angular.module('aws.project', [])
 
 	//TODO find way to identify button id in angular
 	$scope.load = function(buttonid, item){
-		console.log(buttonid);
 		if(buttonid == "newQueryObjectButton"){
 			
-			$scope.currentQuerySelected = "";
+			//$scope.currentQuerySelected = "";
+			$scope.currentJson = "";
 		}
 			
 		if(buttonid == "openQueryObjectButton"){
-			//$scope.queryObjectJson = $scope.currentQuerySelected;
-			//$scope.queryObjectJson = item;
-			$scope.currentQuerySelected = item;
+			//$scope.currentQuerySelected = item;
+			$scope.currentJson = item;
 		}
 	};
 	
@@ -50,7 +47,7 @@ angular.module('aws.project', [])
 	//as soon as the UI is updated fetch the project and the list of queryObjects within
 	$scope.$watch('projectSelectorUI', function(){
 		if($scope.projectSelectorUI != undefined && $scope.projectSelectorUI != ""){
-			queryService.queryObject.projectSelected = $scope.projectSelectorUI;//updates query Object
+			//queryService.queryObject.projectSelected = $scope.projectSelectorUI;//updates query Object
 			$scope.currentProjectSelected = $scope.projectSelectorUI;
 			
 			//if its isnt undefined clean and reset for every project selection iteration
@@ -92,12 +89,12 @@ angular.module('aws.project', [])
 	
 	
 	//updates the UI depending on the queryObject
-	$scope.$watch(function(){
-		return queryService.queryObject.projectSelected;
-	}, function(){
-		$scope.projectSelectorUI = queryService.queryObject.projectSelected;
-	});
-	
+//	$scope.$watch(function(){
+//		return queryService.queryObject.projectSelected;
+//	}, function(){
+//		$scope.projectSelectorUI = queryService.queryObject.projectSelected;
+//	});
+//	
 	
 	//as soon as service returns deleteStatus
 	//1. report status
@@ -114,13 +111,13 @@ angular.module('aws.project', [])
  		 		alert("The Project " + $scope.currentProjectSelected + " has been deleted");
     		 	queryService.dataObject.listOfProjectsFromDatabase = [];//emptying projects list
     		 	queryService.dataObject.listofQueryObjectsInProject = [];//emptying queryObjects list
-    		 	queryService.dataObject.deleteProjectStatus = 0;
     		 	$scope.projectSelectorUI = $scope.defaultProjectOption;//resetting dropDown UI
     		 	$scope.currentProjectSelected = "";//reset
     		 	queryService.getListOfProjectsfromDatabase();//fetch new list
     		 	
     		 }
     	 
+    	 queryService.dataObject.deleteProjectStatus = 0;
     	
      });
      
@@ -139,13 +136,13 @@ angular.module('aws.project', [])
     			 $scope.$broadcast('DB_UPDATE', {status:message});
     			 
     			 $scope.currentQuerySelected = ""; //resetting currently selected queryObject
-    			 queryService.dataObject.deleteQueryObjectStatus = 0;
     			 queryService.dataObject.listofQueryObjectsInProject = [];//resets and updates new list of queryObjects
     			 queryService.getListOfQueryObjectsInProject($scope.projectSelectorUI);//makes a new call
     			 
     			 
     		 }
     	 }
+    	 queryService.dataObject.deleteQueryObjectStatus = 0;
     			
      });
      
@@ -153,40 +150,56 @@ angular.module('aws.project', [])
      	return queryService.dataObject.insertQueryObjectStatus;
       }, function(){ 
      	 $scope.insertQueryObjectStatus = queryService.dataObject.insertQueryObjectStatus;
+     	 console.log("insertStatus", $scope.insertQueryObjectStatus);
+     	// if($scope.insertQueryObjectStatus != 0 || !(angular.isUndefined($scope.insertQueryObjectStatus)))
      	 
-     	 if($scope.insertQueryObjectStatus != 0 || !(angular.isUndefined($scope.insertQueryObjectStatus)))
- 		 	{
- 	    		 if(!(angular.isUndefined($scope.currentQuerySelected.title))){
- 	    			 alert("Query Object " + $scope.currentQuerySelected.title + " has been added");
- 	    			 queryService.dataObject.insertQueryObjectStatus = 0;//reset
- 	    			 queryService.dataObject.listofQueryObjectsInProject = [];
- 	    			 queryService.getListOfQueryObjectsInProject($scope.projectSelectorUI);//makes a new call
- 	    		 }
+// 		 	{
+// 	    		// if(!(angular.isUndefined($scope.editedJson.title))){
+// 	    			 alert("Query Object has been added");
+// 	    			 queryService.dataObject.listofQueryObjectsInProject = [];
+// 	    			 queryService.getListOfQueryObjectsInProject($scope.projectSelectorUI);//makes a new call
+// 	    		// }
+//     		 }
+     	 if(!(angular.isUndefined($scope.insertQueryObjectStatus)))
+     		 {
+     		 	if($scope.insertQueryObjectStatus != 0)
+     		 		{
+	     		 		alert("Query Object has been added");
+	     		 		queryService.dataObject.listofQueryObjectsInProject = [];
+		    			queryService.getListOfQueryObjectsInProject($scope.projectSelectorUI);//makes a new call
+     		 		}
      		 }
+     	 
+      	queryService.dataObject.insertQueryObjectStatus = 0;//reset
       });
 
      
      //sets the current queryObject
-     $scope.choseQueryObject = function(item){
-    	 $scope.currentQuerySelected = item;
-		  console.log("current", $scope.currentQuerySelected);
- 	};
+//     $scope.choseQueryObject = function(item){
+//    	 $scope.currentQuerySelected = item;
+//		  console.log("current", $scope.currentQuerySelected);
+// 	};
 
 	
 	/****************Button Controls***************************************************************************************************************************************/
 	
-	$scope.openInQueryObjectEditor = function(){
-		//load that JSON queryObject
-		queryService.queryObject = $scope.currentQuerySelected;
-		//set the currentJson of the democtrl
-		console.log("updatedQuery", $scope.currentQuerySelected);
-	};
+//	$scope.openInQueryObjectEditor = function(){
+//		//load that JSON queryObject
+//		queryService.queryObject = $scope.currentQuerySelected;
+//		//set the currentJson of the democtrl
+//		console.log("updatedQuery", $scope.currentQuerySelected);
+//	};
 	
+     $scope.loadConstructedQueryObject = function(){
+    	 console.log("cconstructed query Object", queryService.queryObject);
+    	$scope.currentJson = queryService.queryObject; 
+     };
+     
+     
 	//deletes an entire Project along with all queryObjects within
 	$scope.deleteEntireProject = function(){
-		//$scope.currentProjectSelected = $scope.projectSelectorUI;//project selected for addition or deletion from UI
 		console.log("currentProject", $scope.currentProjectSelected);
-		$scope.deleteProjectConfirmation($scope.currentProjectSelected, null);
+		$scope.deleteProjectConfirmation($scope.currentProjectSelected);
 	};
 	
 	

@@ -1,6 +1,6 @@
 <project name="WeaveAnalystServices" basedir=".">
     <path id="classpath">
-        <fileset dir="lib" includes="**/*.jar"/>
+        <!--fileset dir="lib" includes="**/*.jar"/-->
 		<fileset dir="../WeaveServices/lib/" includes="**/*.jar"/>
         <fileset dir="../WeaveServletUtils/lib/" includes="**/*.jar"/>
         <pathelement path="../WeaveServletUtils/bin/classes"/>
@@ -8,23 +8,24 @@
         <fileset dir="/usr/share/java/" includes="servlet-api-2.5.jar"/>
     </path>
     <target name="clean">
-        <delete dir="bin"/>
+    	<echo message="Deleting..."/>
+        <delete dir="build"/>
     </target>
     <target name="build" depends="clean">
 		<echo message="Compiling ${ant.project.name}..."/>
-        <mkdir dir="bin/classes"/>
-        <javac srcdir="src" destdir="bin/classes" classpathref="classpath"
+        <mkdir dir="build/classes"/>
+        <javac srcdir="src" destdir="build/classes" classpathref="classpath"
                 debug="true"
                 debuglevel="lines,vars,source"/>
-        <copy file="src/weave/config/sqlconfig.dtd" tofile="bin/classes/weave/config/sqlconfig.dtd"/>
+        <copy file="../WeaveServices/src/weave/config/sqlconfig.dtd" tofile="build/classes/weave/config/sqlconfig.dtd"/>
     </target>
     <target name="dist" depends="build">
-        <mkdir dir="bin"/>
-        <war destfile="bin/WeaveAnslystServices.war" webxml="WebContent/WEB-INF/web.xml">
-            <lib dir="lib/"/>
+        <mkdir dir="build"/>
+        <war destfile="build/WeaveAnalystServices.war" webxml="WebContent/WEB-INF/web.xml">
+            <!--lib dir="lib/"/-->
 			<lib dir="../WeaveServices/lib"/>
             <lib dir="../WeaveServletUtils/lib"/>
-            <classes dir="bin/classes"/>
+            <classes dir="build/classes"/>
             <classes dir="../WeaveServices/bin/classes"/>
 			<classes dir="../WeaveServletUtils/bin/classes"/>
             <webinf dir="WebContent/WEB-INF"/>

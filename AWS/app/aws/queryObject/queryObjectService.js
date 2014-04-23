@@ -1,5 +1,5 @@
 'use strict';
-goog.require('aws');
+//goog.require('aws');
 /**
  * Query Object Service provides access to the main "singleton" query object.
  *
@@ -7,13 +7,13 @@ goog.require('aws');
  * future.
  */
 
-var dataServiceURL = '/WeaveServices/DataService';
+//var dataServiceURL = '/WeaveServices/DataService';
 
-var computationServiceURL = '/WeaveAnalystServices/ComputationalServlet';
+//var computationServiceURL = '/WeaveAnalystServices/ComputationalServlet';
 
-var scriptManagementURL = '/WeaveAnalystServices/ScriptManagementServlet';
+//var scriptManagementURL = '/WeaveAnalystServices/ScriptManagementServlet';
 
-var projectManagementURL = '/WeaveAnalystServices/ProjectManagementServlet';
+//var projectManagementURL = '/WeaveAnalystServices/ProjectManagementServlet';
 
 //angular.module("aws.queryObject", [])
 QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
@@ -47,29 +47,29 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
     	var deferred = $q.defer();
     	
     	//testing for re-factoring(removing clients)
-    	aws.queryService(scriptManagementURL,'getListOfScripts', ["REPORT_SCRIPTS_LIST",null],  function(result) {
+    	//aws.queryService(scriptManagementURL,'getListOfScripts', ["REPORT_SCRIPTS_LIST",null],  function(result) {
+            
+        //	that.dataObject.listOfScripts = result;
+        //	console.log("removing clients", result);
+        	
+        //	scope.$apply(function() {
+               // deferred.resolve(result);
+        //    });
+        	
+     //   });
+
+    	//works
+        aws.RClient.getListOfScripts(function(result) {
             
         	that.dataObject.listOfScripts = result;
-        	console.log("removing clients", result);
         	
+        	// since this function executes async in a future turn of the event loop, we need to wrap
+            // our code into an $apply call so that the model changes are properly observed.
         	scope.$apply(function() {
                 deferred.resolve(result);
             });
         	
         });
-
-    	//works
-      //  aws.RClient.getListOfScripts(function(result) {
-            
-        	//that.dataObject.listOfScripts = result;
-        	
-        	// since this function executes async in a future turn of the event loop, we need to wrap
-            // our code into an $apply call so that the model changes are properly observed.
-        	//scope.$apply(function() {
-                //deferred.resolve(result);
-          //  });
-        	
-       // });
         
         // regardless of when the promise was or will be resolved or rejected,
         // then calls one of the success or error callbacks asynchronously as soon as the result
@@ -77,41 +77,21 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
         return deferred.promise;
         
     };
-    /**
-     * This function wraps the async aws getListOfProjects function into an angular defer/promise
-     * So that the UI asynchronously wait for the data to be available...
-     */
-    this.getListOfProjects = function() {
-        
-    	if(this.dataObject.listOfProjects) {
-    		return this.dataObject.listOfProjects;
-    	}
-    	
-    	
-    	var deferred = $q.defer();
-
-        aws.DataClient.getListOfProjects(function(result) {
-            
-        	that.dataObject.listOfProjects = result;
-        	
-        	scope.$safeApply(function() {
-                deferred.resolve(result);
-            });
-        	
-        });
-        
-        return deferred.promise;
-        
-    };
+    
     
     this.getListOfProjectsfromDatabase = function() {
-        
-//    	if(this.dataObject.listOfProjectsFromDatabase) {
-//    		return this.dataObject.listOfProjectsFromDatabase;
-//    	}
-    	
-    	
+ 
     	var deferred = $q.defer();
+//    	aws.queryService(projectManagementURL, 'delegateToMethods', ['REPORT_PROJECTS', null], function(result){
+//    		that.dataObject.listOfProjectsFromDatabase = result;
+//    		
+//    		console.log("yellow", result);
+//    		
+//    		scope.$safeApply(function() {
+//    			 deferred.resolve(result);
+//    		    		
+//    	 });
+//    	});
         aws.DataClient.getListOfProjectsFromDatabase(function(result) {
             
         	that.dataObject.listOfProjectsFromDatabase = result;
@@ -193,12 +173,7 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
      * So that the UI asynchronously wait for the data to be available...
      */
     this.getListOfQueryObjectsInProject = function(projectName) {
-    	
-//    	if(this.dataObject.listofQueryObjectsInProject) {
-//    		return this.dataObject.listofQueryObjectsInProject;
-//    	}
-	
-    	
+ 
     	var deferred = $q.defer();
 
         aws.DataClient.getListOfQueryObjects(projectName, function(result) {
@@ -207,9 +182,6 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
         	that.dataObject.listofQueryObjectsInProject = result[0];
         	that.dataObject.queryNames = result[1];
         	that.dataObject.projectDescription = result[2];
-        	
-        	console.log("projectDescription", that.dataObject.projectDescription);
-        	
         	
         	scope.$safeApply(function() {
                 deferred.resolve(result);
@@ -258,12 +230,6 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
     	  */
     	this.getDataColumnsEntitiesFromId = function(id, forceUpdate) {
             
-//    		if(!forceUpdate) {
-//	    		if (this.dataObject.columns) {
-//	    			return this.dataObject.columns;
-//	    		}
-//    		}
-
     		var deferred = $q.defer();
     		
             aws.DataClient.getEntityChildIds(id, function(idsArray) {
@@ -297,11 +263,7 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
     	  * We use angular deferred/promises so that the UI asynchronously wait for the data to be available...
     	  */
     	this.getGeometryDataColumnsEntities = function(resultHandler) {
-            
-//    		if (this.dataObject.geometryColumns) {
-//    			return this.dataObject.geometryColumns;
-//    		}
-    		
+ 
     		var deferred = $q.defer();
     		
             aws.DataClient.getEntityIdsByMetadata({"dataType":"geometry"}, function(idsArray) {
@@ -332,11 +294,7 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
          * again angular defer/promise so that the UI asynchronously wait for the data to be available...
          */
         this.getDataTableList = function(){
-            
-//        	if (this.dataObject.dataTableList) {
-//        		return this.dataObject.dataTableList;
-//        	}
-        	
+           	
         	var deferred = $q.defer();
             
             aws.DataClient.getDataTableList(function(EntityHierarchyInfoArray){
@@ -393,20 +351,7 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
         	}
         };
         
-        this.updateEntity = function(user, password, entityId, diff) {
-
-        	var deferred = $q.defer();
-            
-            aws.AdminClient.updateEntity(user, password, entityId, diff, function(){
-                
-            	scope.$apply(function(){
-                    deferred.resolve();
-                });
-            });
-            return deferred.promise;
-        };
-        
-        
+      
          // Source: http://www.bennadel.com/blog/1504-Ask-Ben-Parsing-CSV-Strings-With-Javascript-Exec-Regular-Expression-Command.htm
          // This will parse a delimited string into an array of
          // arrays. The default delimiter is the comma, but this

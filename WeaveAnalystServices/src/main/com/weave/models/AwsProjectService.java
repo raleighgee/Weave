@@ -35,7 +35,7 @@ public class AwsProjectService extends WeaveServlet
 	    * @throws Exception
 	    */
 	//retrieves all the projects belonging to a particular user
-	public static String[] getProjectFromDatabase() throws SQLException, RemoteException{
+	public static String[] getProjectListFromDatabase() throws SQLException, RemoteException{
 		SQLResult projectObjects= null;//all the projects belonging to the userName
 		
 		Connection con = WeaveConfig.getConnectionConfig().getAdminConnection();

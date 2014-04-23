@@ -34,74 +34,44 @@ public class AwsRService extends RServiceUsingRserve
 	}
 	
 	public void init(ServletConfig config) throws ServletException {
-		awsConfigPath = WeaveContextParams.getInstance(
-				config.getServletContext()).getConfigPath();
-		awsConfigPath = awsConfigPath + "/../aws-config/";
+//		awsConfigPath = WeaveContextParams.getInstance(
+//				config.getServletContext()).getConfigPath();
+//		awsConfigPath = awsConfigPath + "/../aws-config/";
 	}
 
 	
-	
-    // this functions intends to run a script with filtered.
+	// this functions intends to run a script with filtered.
 	// essentially this function should eventually be our main run script function.
 	// in the request object, there will be: the script name
 	// and the columns, along with their filters.
 	// TODO not completed
-	public static ScriptResult runScriptWithFilteredColumns(String scriptName,	int [] ids, NestedColumnFilters filters) throws Exception
+	public static Object runScript(String scriptAbsPath, Object[][] dataSet) throws Exception
 	{
-		RResult[] returnedColumns;
 
-		String cannedScript = awsConfigPath + "RScripts/" + scriptName;
-		
-		long startTime = System.currentTimeMillis();
-		
-		Object[][] recordData = DataService.getFilteredRows(ids, filters, null).recordData;
-		if(recordData.length == 0){
-			throw new RemoteException("Query produced no rows...");
-		}
-		Object[][] columnData = AWSUtils.transpose(recordData);
-		recordData = null;
-		
-		long endTime = System.currentTimeMillis();
-		
-		long time1 = endTime - startTime;
-		
-		Object[] inputValues = {cannedScript, columnData};
-		String[] inputNames = {"cannedScriptPath", "dataset"};
+		Object[] inputValues = {scriptAbsPath, dataSet};
+		String[] inputNames = {"scriptAbsolutePath", "dataset"};
 
-		String finalScript = "scriptFromFile <- source(cannedScriptPath)\n" +
+		String script = "scriptFromFile <- source(scriptAbsolutePath)\n" +
 					         "scriptFromFile$value(dataset)"; 
 
 		String[] outputNames = {};
-		
-		startTime = System.currentTimeMillis();
-		returnedColumns = runAWSScript(null, inputNames, inputValues, outputNames, finalScript, "", false, false);
-		endTime = System.currentTimeMillis();
-		columnData = null;
-		long time2 = endTime - startTime;
-		
-		ScriptResult result = new ScriptResult();
-		
-		result.data = returnedColumns;
-		result.times[0] = time1;
-		result.times[1] = time2;
-		
-		return result;
 
+		return runAWSScript(null, inputNames, inputValues, outputNames, script, "", false, false);
 	}
-	
+
 	private static RResult[] runAWSScript( String docrootPath, String[] inputNames, Object[] inputValues, String[] outputNames, String script, String plotScript, boolean showIntermediateResults, boolean showWarnings) throws Exception
 	{		
 		RConnection rConnection = RServiceUsingRserve.getRConnection();
-		
+
 		RResult[] results = null;
 		Vector<RResult> resultVector = new Vector<RResult>();
 		try
 		{
 			// ASSIGNS inputNames to respective Vector in R "like x<-c(1,2,3,4)"			
 			RServiceUsingRserve.assignNamesToVector(rConnection,inputNames,inputValues);
-			
+
 			evaluateWithTypeChecking( rConnection, script, resultVector, showIntermediateResults, showWarnings);
-			
+
 			if (plotScript != ""){// R Script to EVALUATE plotScript
 				String plotEvalValue = RServiceUsingRserve.plotEvalScript(rConnection,docrootPath, plotScript, showWarnings);
 				resultVector.add(new RResult("Plot Results", plotEvalValue));
@@ -113,7 +83,7 @@ public class AwsRService extends RServiceUsingRserve
 			}
 			// clear R objects
 			evalScript( rConnection, "rm(list=ls())", false);
-			
+
 		}
 		catch (Exception e)	{
 			e.printStackTrace();
@@ -129,20 +99,20 @@ public class AwsRService extends RServiceUsingRserve
 		}
 		return results;
 	}
-	
+
 	private static REXP evalScript(RConnection rConnection, String script, boolean showWarnings) throws REXPMismatchException,RserveException
 	{
-		
+
 		REXP evalValue = null;
-		
+
 		if (showWarnings)			
 			evalValue =  rConnection.eval("try({ options(warn=2) \n" + script + "},silent=TRUE)");
 		else
 			evalValue =  rConnection.eval("try({ options(warn=1) \n" + script + "},silent=TRUE)");
-		
+
 		return evalValue;
 	}
-	
+
 	private static Vector<RResult> evaluateWithTypeChecking(RConnection rConnection, String script, Vector<RResult> newResultVector, boolean showIntermediateResults, boolean showWarnings ) throws ScriptException, RserveException, REXPMismatchException 
 	{
 		REXP evalValue= evalScript(rConnection, script, showWarnings);
@@ -158,9 +128,9 @@ public class AwsRService extends RServiceUsingRserve
 		}
 
 		Object[][] final2DArray;//collecting the result as a two dimensional arrray 
-		
+
 		Vector<String> names = evalValue.asList().names;
-		
+
 	//try{
 			//getting the rowCounter variable 
 			int rowCounter = 0;
@@ -171,12 +141,12 @@ public class AwsRService extends RServiceUsingRserve
 			if(currentRow instanceof int[])
 			{
 				rowCounter = ((int[]) currentRow).length;
-									
+
 			}
 			else if (currentRow instanceof Integer[])
 			{
 				rowCounter = ((Integer[]) currentRow).length;
-				
+
 			}
 			else if(currentRow instanceof Double[])
 			{
@@ -194,28 +164,28 @@ public class AwsRService extends RServiceUsingRserve
 			{
 				rowCounter = ((String[]) currentRow).length;
 			}
-			
+
 			//handling single row, that is the currentColumn has only one record
 			else if (currentRow instanceof Double)
 			{
 				rowCounter = 1;
 			}
-			
+
 			else if(currentRow instanceof Integer)
 			{
 				rowCounter = 1;
 			}
-			
+
 			else if(currentRow instanceof String)
 			{
 				rowCounter = 1; 
 			}
 			int columnHeadingsCount = 1;
-			
+
 			rowCounter = rowCounter + columnHeadingsCount;//we add an additional row for column Headings
-			
+
 			final2DArray = new Object[rowCounter][columns.length];
-			
+
 			//we need to push the first entry as column names to generate this structure
 			/*[
 			["k","x","y","z"]
@@ -223,11 +193,11 @@ public class AwsRService extends RServiceUsingRserve
 			["k2",3,4,6]
 			["k3",2,4,56]
 			] */
-		
+
 			String [] namesArray = new String[names.size()];
 			names.toArray(namesArray);
 			final2DArray[0] = namesArray;//first entry is column names
-			
+
 			for( int j = 1; j < rowCounter; j++)
 			{
 				ArrayList<Object> tempList = new ArrayList<Object>();//one added for every column in 'columns'
@@ -269,26 +239,26 @@ public class AwsRService extends RServiceUsingRserve
 					{
 						tempList.add(f, (Integer)currentCol);
 					}
-					
+
 				}
 				Object[] tempArray = new Object[columns.length];
 				tempList.toArray(tempArray);
 				final2DArray[j] = tempArray;//after the first entry (column Names)
-				
+
 			}
-			
+
 			System.out.print(final2DArray);
 			newResultVector.add(new RResult("endResult", final2DArray));
 			//newResultVector.add(new RResult("timeLogString", timeLogString));
-			
+
 
 			return newResultVector;
-			
+
 	//	}
 	//	catch (Exception e){
 			//e.printStackTrace();
 	//	}
-		
+
 //do the rest to generate a single continuous string representation of the result 
 		//	String finalresultString = "";
 //		String namescheck = Strings.join(",", names);
@@ -379,7 +349,7 @@ public class AwsRService extends RServiceUsingRserve
 //			finalresultString = finalresultString.substring(0, finalresultString.length()-1);
 //			finalresultString += '\n';
 //		}
-		
+
 		//newResultVector.add(new RResult("endResult", finalresultString));
 		//newResultVector.add(new RResult("timeLogString", timeLogString));
 

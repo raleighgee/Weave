@@ -18,6 +18,7 @@ import weave.config.WeaveContextParams;
 import weave.servlets.WeaveServlet;
 
 import com.google.gson.Gson;
+import com.weave.config.AwsContextParams;
 
 public class ScriptManagerService extends WeaveServlet{
 
@@ -30,8 +31,7 @@ public class ScriptManagerService extends WeaveServlet{
 	
 	public void init(ServletConfig config) throws ServletException {
 		super.init(config);
-		awsConfigPath = WeaveContextParams.getInstance(
-				config.getServletContext()).getConfigPath() + "/../aws-config/";
+		awsConfigPath = AwsContextParams.getInstance(config.getServletContext()).getAwsConfigPath();
 	}
 	
 	
