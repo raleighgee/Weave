@@ -6,14 +6,6 @@
  * Don't worry, it will be possible to manage more than one query object in the
  * future.
  */
-var dataServiceURL = '/WeaveServices/DataService';
-
-var computationServiceURL = '/WeaveAnalystServices/ComputationalServlet';
-
-var scriptManagementURL = '/WeaveAnalystServices/ScriptManagementServlet';
-
-var projectManagementURL = '/WeaveAnalystServices/ProjectManagementServlet';
-
 //angular.module("aws.queryObject", [])
 QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
     
@@ -22,7 +14,6 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
 			title : "Beta Query Object",
 			date : new Date(),
     		author : "",
-			ComputationEngine : "R",
 			Indicator : {},
 			GeographyFilter : {},
 			TimePeriodFilter : {},
@@ -46,11 +37,10 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
     	var deferred = $q.defer();
     	
     	//testing for re-factoring(removing clients)
-    	aws.queryService(scriptManagementURL,'getListOfScripts', ["REPORT_SCRIPTS_LIST",null],  function(result) {
+    	aws.RClient.getListOfScripts(function(result) {
             
         	that.dataObject.listOfScripts = result;
-        	console.log("removing clients", result);
-        	
+
         	scope.$apply(function() {
                 deferred.resolve(result);
             });
@@ -236,6 +226,7 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
         
         aws.RClient.getScriptMetadata(scriptName, function(result) {
         	
+        	console.log(result);
         	that.dataObject.scriptMetadata = result;
         	// since this function executes async in a future turn of the event loop, we need to wrap
             // our code into an $apply call so that the model changes are properly observed.

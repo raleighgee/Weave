@@ -39,6 +39,12 @@
   	<param-value></param-value>
   </context-param>
   
+  <!-- This is the path of Stata.  Example value: C:/Program Files/Stata/Stata.exe -->
+  <context-param>
+  	<param-name>StataPath</param-name>
+  	<param-value>stata-se</param-value>
+  </context-param>
+  
   <servlet>
     <servlet-name>DataService</servlet-name>
     <servlet-class>weave.servlets.DataService</servlet-class>

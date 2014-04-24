@@ -76,7 +76,7 @@ public class AWSRService extends RService
 		awsConfigPath = WeaveContextParams.getInstance(
 				config.getServletContext()).getConfigPath();
 		awsConfigPath = awsConfigPath + "/../aws-config/";
-		programPath = WeaveContextParams.getInstance(config.getServletContext()).getRServePath();
+		programPath = WeaveContextParams.getInstance(config.getServletContext()).getStataPath();
 		rScriptsPath= awsConfigPath + "RScripts/";
 		stataScriptsPath = awsConfigPath + "StataScripts/";
 		tempDirPath = awsConfigPath + "temp/";
@@ -348,7 +348,7 @@ public class AWSRService extends RService
 			
 			// Run and time the script
 			startTime = System.currentTimeMillis();
-			resultData = runStataScript(scriptName, recordData, programPath, tempDirPath);
+			resultData = runStataScript(scriptName, recordData, programPath, tempDirPath, stataScriptsPath);
 			endTime = System.currentTimeMillis();
 			time2 = endTime - startTime;
 		}
@@ -625,7 +625,7 @@ public class AWSRService extends RService
 	//
 	//
 	
-	public Object runStataScript(String scriptAbsPath, Object[][] dataSet, String programPath, String tempDirPath) throws Exception {
+	public Object runStataScript(String scriptName, Object[][] dataSet, String programPath, String tempDirPath, String scriptPath) throws Exception {
 
 		int exitValue = -1;
 		CSVParser parser = new CSVParser();
@@ -643,7 +643,7 @@ public class AWSRService extends RService
 		
 		try 
 		{
-			dataSetCSV = new File(FilenameUtils.concat(tempDirectory.getAbsolutePath(), "data.csv"));
+			dataSetCSV = new File(FilenameUtils.concat(tempDirectory.getCanonicalPath(), "data.csv"));
 			BufferedWriter out = new BufferedWriter(new FileWriter(dataSetCSV));
 			parser.createCSV(dataSet, true, out, true);
 			//jsonParser.toJson(dataSet, out);
@@ -658,11 +658,13 @@ public class AWSRService extends RService
 		
 		try 
 		{
-			// TODO set up the csv variables name
-			tempScript += "insheet using " + dataSetCSV.getAbsolutePath() + ", clear \n" +
-					"noisily do " + scriptAbsPath;
+			tempScript += "insheet using " + dataSetCSV.getAbsolutePath() + ", clear" + "\n" +
+					"global path=\"" + tempDirPath + "\"\n" +
+					"cd \"$path/\" \n" +
+					"noisily do " + new File(FilenameUtils.concat(scriptPath, scriptName)).getPath() + "\n";
+					// "capture erase " +  tempDirPath + "tempScript.log";
 			
-			tempScriptFile = new File(tempDirectory.getAbsolutePath() + "tempScript.do");
+			tempScriptFile = new File(FilenameUtils.concat(tempDirectory.getCanonicalPath(), "tempScript.do"));
 			BufferedWriter out = new BufferedWriter(new FileWriter(tempScriptFile));
 			out.write(tempScript);
 			out.close();
@@ -675,13 +677,13 @@ public class AWSRService extends RService
 		
 		if(getOSType() == OS_TYPE.LINUX || getOSType() == OS_TYPE.OSX)
 		{
-			args = new String[] {programPath, "-b", "-q", "do", tempScriptFile.getCanonicalPath()};
+			args = new String[] {programPath, "-b", "-q", "do", tempDirPath};
 			
 		}
 		
 		else if(getOSType() == OS_TYPE.WINDOWS)
 		{
-			args = new String[] {programPath, "/e", "/q", "do", tempScriptFile.getCanonicalPath()};
+			args = new String[] {programPath, "/e", "/q", "do", tempDirPath};
 		}
 		
 		else if(getOSType() == OS_TYPE.UNKNOWN)
@@ -791,7 +793,7 @@ public class AWSRService extends RService
 		}
 	}
 	
-	public JsonObject getScriptMetadata (String scriptName) throws Exception {
+	public Object getScriptMetadata (String scriptName) throws Exception {
 		
 		if(getScriptType(scriptName) == SCRIPT_TYPE.R)
 		{
@@ -951,9 +953,9 @@ public class AWSRService extends RService
 	 * @return The script metadata as a Json object
 	 * @throws Exception
 	 */
-	private JsonObject getScriptMetadata(File directory, String scriptName) throws Exception {
+	private Object getScriptMetadata(File directory, String scriptName) throws Exception {
 		// this object will get the metadata from the json file
-		JsonObject scriptMetadata;
+		Object scriptMetadata;
 		Gson gson = new Gson();
 		// we replace scriptname.R with scriptname.json
 		String jsonFileName = FilenameUtils.removeExtension(scriptName).concat(".json");
@@ -964,7 +966,7 @@ public class AWSRService extends RService
 		{
 			BufferedReader br = new BufferedReader(new FileReader(new File(directory, jsonFileName)));
 			
-			scriptMetadata = gson.fromJson(br, JsonObject.class);
+			scriptMetadata = gson.fromJson(br, Object.class);
 			return scriptMetadata;
 		}
 		else

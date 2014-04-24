@@ -74,17 +74,17 @@ public class WeaveContextParams
 		configPath = context.getRealPath(context.getInitParameter("configPath")).replace('\\', '/');
 		uploadPath = configPath + "/upload/";
 		rServePath = context.getInitParameter("RServePath");
-		
 		// if RServePath is not specified, keep it empty
 		if (!Strings.isEmpty(rServePath))
 			rServePath = context.getRealPath(rServePath).replace('\\', '/');
 		
+		stataPath = context.getInitParameter("StataPath");
 		// make sure folders exist
 		new File(configPath).mkdirs();
 		new File(uploadPath).mkdirs();
 	}
 	
-	private String docrootPath, uploadPath, configPath, rServePath;
+	private String docrootPath, uploadPath, configPath, rServePath, stataPath;
 
 	/**
 	 * @return The docroot path, ending in "/"
@@ -113,5 +113,13 @@ public class WeaveContextParams
 	public String getRServePath()
 	{
 		return rServePath;
+	}
+	
+	/**
+	 * @return The path where Stata.exe is stored
+	 */
+	public String getStataPath()
+	{
+		return stataPath;
 	}
 }

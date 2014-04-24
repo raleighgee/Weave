@@ -226,14 +226,7 @@ aws.QueryHandler = function(queryObject)
 
 	//this.weaveClient = new aws.WeaveClient($('#weave')[0]);
 
-	// check what type of computation engine we have, to create the appropriate
-	// computation client
-	this.ComputationEngine = null;
-	if(queryObject.ComputationEngine == 'r' || queryObject.ComputationEngine == 'R') {
-		//console.log(this.rRequestObject);
-		this.ComputationEngine = new aws.RClient(this.rRequestObject);
-	}// else if (queryObject.scriptType == 'stata') {
-//		// computationEngine = new aws.StataClient();
+	this.ComputationEngine = new aws.RClient(this.rRequestObject);
 
 	this.resultDataSet = "";
 };
@@ -263,11 +256,11 @@ aws.QueryHandler.prototype.runQuery = function() {
 	};
 	
 	console.log(this.rRequestObject);
-	this.ComputationEngine.run("runScriptWithFilteredColumns", function(result) {	
+	this.ComputationEngine.run("runScript", function(result) {	
 		aws.timeLogString = "";
 		that.resultDataSet = result.data[0].value;
 		$("#LogBox").append('<p>' + "Data Load Time: " + result.times[0]/1000 + " seconds.\n" + '</p>');
-		$("#LogBox").append("R Script Computation Time: " + result.times[1] / 1000 + " seconds." + '</p>');
+		$("#LogBox").append("Script Computation Time: " + result.times[1] / 1000 + " seconds." + '</p>');
 
 		newWeaveWindow.workOnData(that, result.data[0].value);
 		

@@ -1,10 +1,12 @@
 angular.module('aws.configure.script')
   .service("scriptManagerService", ['$q', '$rootScope', function($q, scope) {
-      this.dataObject = {
+     
+	  this.dataObject = {
         scriptName: ""
       };
       var that = this;
       var refreshNeeded = true;
+      
       this.getListOfScripts = function() {
         if(!refreshNeeded && this.dataObject.listOfScripts){
           return this.dataObject.listOfScripts;
@@ -49,6 +51,7 @@ angular.module('aws.configure.script')
         var deferred = $q.defer();
         aws.RClient.getScriptMetadata(this.dataObject.scriptName, function(result) {
           that.dataObject.scriptMetadata = result;
+          console.log(result);
           scope.$safeApply(function() { deferred.resolve(result); });
         });
         return deferred.promise;
@@ -62,6 +65,7 @@ angular.module('aws.configure.script')
         });
         return deferred.promise;
       };
+      
       this.saveChangedMetadata = function(metadata){
         var deferred = $q.defer();
         this.dataObject.scriptMetadata = metadata;

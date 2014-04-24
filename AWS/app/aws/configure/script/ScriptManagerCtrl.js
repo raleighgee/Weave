@@ -23,6 +23,7 @@ angular.module('aws.configure.script', ['ngGrid', 'mk.editablespan'])
             outputs: [{param: "New Output",
                 description: "Type a Description"}]
           };
+          
           $scope.$watch('selectedMetadata', function(newv, oldv) {
             if ($scope.selectedScript[0] != "" && $scope.selectedScript[0] != undefined) {
               $scope.savingMetadata = true;
@@ -35,6 +36,7 @@ angular.module('aws.configure.script', ['ngGrid', 'mk.editablespan'])
                       });
             }
           }, true);
+          
           $scope.$watch(function() {
             return scriptManagerService.dataObject.listOfScripts;
           }, function() {
