@@ -125,24 +125,19 @@ angular.module('aws.project', [])
     	 return queryService.dataObject.deleteQueryObjectStatus;
      }, function(){
     	 $scope.deleteQueryObjectStatus = queryService.dataObject.deleteQueryObjectStatus;
+    	 console.log("deleteStatus", $scope.deleteQueryObjectStatus);
+    	 console.log("name ofQueryToDelete", nameOfQueryToDelete);
     	 
-    	 if(! ($scope.deleteQueryObjectStatus == 0 || angular.isUndefined($scope.deleteQueryObjectStatus))){
-    		 
-    		 if((nameOfQueryToDelete != null)){
-    			 
-    			 alert("Query Object " + nameOfQueryToDelete + " has been deleted");
-    			 //LOG CONTROLLER BROADCAST
-    			 var message = $scope.deleteQueryObjectStatus + " rows deleted from database";
-    			 $scope.$broadcast('DB_UPDATE', {status:message});
-    			 
-    			 $scope.currentQuerySelected = ""; //resetting currently selected queryObject
-    			 queryService.dataObject.listofQueryObjectsInProject = [];//resets and updates new list of queryObjects
-    			 queryService.getListOfQueryObjectsInProject($scope.projectSelectorUI);//makes a new call
-    			 
-    			 
-    		 }
-    	 }
-    	 queryService.dataObject.deleteQueryObjectStatus = 0;
+    	 if(!(angular.isUndefined($scope.deleteQueryObjectStatus)))
+ 		 {
+ 		 	if($scope.deleteQueryObjectStatus != 0 && !(angular.isUndefined($scope.projectSelectorUI)))
+ 		 		{
+ 		 			alert("Query Object " + nameOfQueryToDelete + " has been deleted");
+     		 		queryService.dataObject.listofQueryObjectsInProject = [];
+	    			queryService.getListOfQueryObjectsInProject($scope.projectSelectorUI);//makes a new call
+ 		 		}
+ 		 }
+    	 
     			
      });
      
@@ -150,7 +145,6 @@ angular.module('aws.project', [])
      	return queryService.dataObject.insertQueryObjectStatus;
       }, function(){ 
      	 $scope.insertQueryObjectStatus = queryService.dataObject.insertQueryObjectStatus;
-     	 console.log("insertStatus", $scope.insertQueryObjectStatus);
      	// if($scope.insertQueryObjectStatus != 0 || !(angular.isUndefined($scope.insertQueryObjectStatus)))
      	 
 // 		 	{

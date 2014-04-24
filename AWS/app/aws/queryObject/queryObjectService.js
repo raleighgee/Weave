@@ -112,7 +112,7 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
     	var deferred = $q.defer();
 
         aws.DataClient.insertQueryObject(userName, projectName, projectDescription,queryObjectTitle,  queryObjectContent, function(result) {
-        	console.log("insertQueryObjectStatus", result);
+        	//console.log("insertQueryObjectStatus", result);
         	that.dataObject.insertQueryObjectStatus = result;//returns an integer telling us the number of row(s) added
         	scope.$safeApply(function() {
                 deferred.resolve(result);
@@ -157,7 +157,6 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
 
         aws.DataClient.deleteQueryObject(projectName,queryObjectName, function(result) {
         	that.dataObject.deleteQueryObjectStatus = result;//returns a boolean which states if the query has been deleted(true)
-        	console.log("in the service",that.dataObject.deleteQueryObjectStatus );
         	scope.$safeApply(function() {
                 deferred.resolve(result);
             });
