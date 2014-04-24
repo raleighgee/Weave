@@ -538,7 +538,7 @@ public class AWSRService extends RService
 		Map<String,Object> whereParams = new HashMap<String, Object>();
 		whereParams.put("projectName", projectName);
 		
-		WhereClauseBuilder<Object> builder = new WhereClauseBuilder<Object>(true);
+		WhereClauseBuilder<Object> builder = new WhereClauseBuilder<Object>(false);
 		builder.addGroupedConditions(whereParams, null,null);
 		WhereClause<Object> clause = builder.build(con);
 		
@@ -556,7 +556,7 @@ public class AWSRService extends RService
 		whereParams.put("projectName", projectName);
 		whereParams.put("queryObjectTitle", queryObjectTitle);
 		
-		WhereClauseBuilder<Object> builder = new WhereClauseBuilder<Object>(true);
+		WhereClauseBuilder<Object> builder = new WhereClauseBuilder<Object>(false);
 		builder.addGroupedConditions(whereParams, null,null);
 		WhereClause<Object> clause = builder.build(con);
 		

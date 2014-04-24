@@ -149,7 +149,7 @@ public class AwsProjectService extends WeaveServlet
 		//whereParams.put("projectName", projectName);
 		whereParams = params;
 		
-		WhereClauseBuilder<Object> builder = new WhereClauseBuilder<Object>(true);
+		WhereClauseBuilder<Object> builder = new WhereClauseBuilder<Object>(false);
 		builder.addGroupedConditions(whereParams, null,null);
 		WhereClause<Object> clause = builder.build(con);
 		
@@ -168,7 +168,7 @@ public class AwsProjectService extends WeaveServlet
 		//whereParams.put("queryObjectTitle", queryObjectTitle);
 		whereParams = params;
 		
-		WhereClauseBuilder<Object> builder = new WhereClauseBuilder<Object>(true);
+		WhereClauseBuilder<Object> builder = new WhereClauseBuilder<Object>(false);
 		builder.addGroupedConditions(whereParams, null,null);
 		WhereClause<Object> clause = builder.build(con);
 		
