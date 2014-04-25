@@ -1,68 +1,44 @@
 package com.weave.servlets;
 
-import org.apache.commons.io.FilenameUtils;
+import static weave.config.WeaveConfig.initWeaveConfig;
 
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
+
+import weave.config.WeaveContextParams;
 import weave.servlets.WeaveServlet;
 import weave.utils.SQLUtils.WhereClause.NestedColumnFilters;
 
-import com.weave.beans.ScriptResult;
-import com.weave.interfaces.IScriptEngine;
-import com.weave.models.AwsRService;
-import com.weave.models.AwsStataService;;
+import com.weave.config.AwsContextParams;
+import com.weave.models.computations.ComputationEngineBroker;
+import com.weave.models.computations.ScriptResult;
 
-
-public class ComputationServlet extends WeaveServlet implements IScriptEngine
+public class ComputationServlet extends WeaveServlet
 {	
-	ComputationServlet(){
-		
+	ComputationServlet()
+	{
 	}
+	private String programPath = "";
+	private String tempDirPath = "";
+	public void init(ServletConfig config) throws ServletException
+	{
+		super.init(config);
+		initWeaveConfig(WeaveContextParams.getInstance(config.getServletContext()));
+		programPath = WeaveContextParams.getInstance(config.getServletContext()).getRServePath();
+		tempDirPath = AwsContextParams.getInstance(config.getServletContext()).getAwsConfigPath() + "temp";
+	}
+
 	private static final long serialVersionUID = 1L;
+
 	
-	private String computationEngineUsed = "";//TODO move logic into separate level
-	
-	@SuppressWarnings("unused")
-	private void decideComputationEngine(String scriptName, int [] ids, NestedColumnFilters filters){
+	public ScriptResult runScript(String scriptName, int[] ids, NestedColumnFilters filters) throws Exception
+	{
 		
-		String extension = FilenameUtils.getExtension(scriptName);
-		
-		//Use R as the computation engine
-		if(extension.equalsIgnoreCase("R")){
-			computationEngineUsed = "R";
-		}
-		//Use STATA as the computation engine
-		if(extension.equalsIgnoreCase("do")){
-			computationEngineUsed = "STATA";
-		}
-		
-		if(computationEngineUsed.matches("R"))
-			runRScript(scriptName, ids, filters);
-		
-		if(computationEngineUsed.matches("STATA"))
-			runStataScript(scriptName, ids, filters);
-		
-	}
-	
-	
-	private ScriptResult runRScript(String scriptName, int [] ids, NestedColumnFilters filters){
-		ScriptResult finalResult = null;
-		try {
-			finalResult = AwsRService.runScriptWithFilteredColumns(scriptName, ids,  filters);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		return finalResult;
-	}
-	
-	private int runStataScript(String scriptName, int[]ids, NestedColumnFilters filters){
-		int finalResult = 0;//TODO revise and change this
-		try {
-			finalResult = AwsStataService.runStataScript();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return finalResult;
+		ScriptResult result = new ScriptResult();
+
+		ComputationEngineBroker broker = new ComputationEngineBroker();
+		result = broker.decideComputationEngine(scriptName, ids, filters, programPath, tempDirPath);
+
+		return result;
 	}
 }

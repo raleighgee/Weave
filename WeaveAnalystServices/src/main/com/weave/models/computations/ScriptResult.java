@@ -1,4 +1,4 @@
-package com.weave.beans;
+package com.weave.models.computations;
 
 import weave.beans.RResult;
 
