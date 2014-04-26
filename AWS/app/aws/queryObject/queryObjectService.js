@@ -92,16 +92,7 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
     		    		
     	 });
     	});
-//        aws.DataClient.getListOfProjectsFromDatabase(function(result) {
-//            
-//        	that.dataObject.listOfProjectsFromDatabase = result;
-//        	
-//        	scope.$safeApply(function() {
-//                deferred.resolve(result);
-//            });
-//        	
-//        });
-        
+
         return deferred.promise;
         
     };
@@ -110,15 +101,31 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
     this.insertQueryObjectToProject = function(userName, projectName,projectDescription, queryObjectTitle, queryObjectContent) {
       	
     	var deferred = $q.defer();
-
-        aws.DataClient.insertQueryObject(userName, projectName, projectDescription,queryObjectTitle,  queryObjectContent, function(result) {
-        	//console.log("insertQueryObjectStatus", result);
-        	that.dataObject.insertQueryObjectStatus = result;//returns an integer telling us the number of row(s) added
-        	scope.$safeApply(function() {
-                deferred.resolve(result);
-            });
-        	
-        });
+    	var params = {};
+    	params.userName = userName;
+    	params.projectName = projectName;
+    	params.projectDescription = projectDescription;
+    	params.queryObjectTitle= queryObjectTitle;
+    	params.queryObjectContent = queryObjectContent;
+    	
+    	aws.queryService(projectManagementURL, 'delegateToMethods', ['INSERT_QUERY_OBJECTS', params], function(result){
+    		that.dataObject.listOfProjectsFromDatabase = result;
+    		
+    		console.log("yellow2", result);
+    		
+    		scope.$safeApply(function() {
+    			 deferred.resolve(result);
+    		    		
+    	 });
+    	});
+//        aws.DataClient.insertQueryObject(userName, projectName, projectDescription,queryObjectTitle,  queryObjectContent, function(result) {
+//        	//console.log("insertQueryObjectStatus", result);
+//        	that.dataObject.insertQueryObjectStatus = result;//returns an integer telling us the number of row(s) added
+//        	scope.$safeApply(function() {
+//                deferred.resolve(result);
+//            });
+//        	
+//        });
         
         return deferred.promise;
         
@@ -131,16 +138,29 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
     this.deleteProject = function(projectName) {
           	
     	var deferred = $q.defer();
+    	
+    	var params = {};
+    	params.projectName = projectName;
+    	aws.queryService(projectManagementURL, 'delegateToMethods', ['DELETE_PROJECT', params], function(result){
+    		that.dataObject.listOfProjectsFromDatabase = result;
+    		
+    		console.log("yellow3", result);
+    		
+    		scope.$safeApply(function() {
+    			 deferred.resolve(result);
+    		    		
+    	 });
+    	});
 
-        aws.DataClient.deleteProject(projectName, function(result) {
-        	console.log("deleteProjectStatus", result);
-            
-        	that.dataObject.deleteProjectStatus = result;//returns an integer telling us the number of row(s) deleted
-        	scope.$safeApply(function() {
-                deferred.resolve(result);
-            });
-        	
-        });
+//        aws.DataClient.deleteProject(projectName, function(result) {
+//        	console.log("deleteProjectStatus", result);
+//            
+//        	that.dataObject.deleteProjectStatus = result;//returns an integer telling us the number of row(s) deleted
+//        	scope.$safeApply(function() {
+//                deferred.resolve(result);
+//            });
+//        	
+//        });
         
         return deferred.promise;
         
@@ -154,14 +174,27 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
     this.deleteQueryObject = function(projectName, queryObjectName) {
           	
     	var deferred = $q.defer();
-
-        aws.DataClient.deleteQueryObject(projectName,queryObjectName, function(result) {
-        	that.dataObject.deleteQueryObjectStatus = result;//returns a boolean which states if the query has been deleted(true)
-        	scope.$safeApply(function() {
-                deferred.resolve(result);
-            });
-        	
-        });
+    	var params = {};
+    	params.projectName = projectName;
+    	params.queryObjectName = queryObjectName;
+    	
+    	aws.queryService(projectManagementURL, 'delegateToMethods', ['DELETE_QUERY_OBJECT', params], function(result){
+    		that.dataObject.listOfProjectsFromDatabase = result;
+    		
+    		console.log("yellow4", result);
+    		
+    		scope.$safeApply(function() {
+    			 deferred.resolve(result);
+    		    		
+    	 });
+    	});
+//        aws.DataClient.deleteQueryObject(projectName,queryObjectName, function(result) {
+//        	that.dataObject.deleteQueryObjectStatus = result;//returns a boolean which states if the query has been deleted(true)
+//        	scope.$safeApply(function() {
+//                deferred.resolve(result);
+//            });
+//        	
+//        });
         
         return deferred.promise;
         
@@ -174,19 +207,30 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
     this.getListOfQueryObjectsInProject = function(projectName) {
  
     	var deferred = $q.defer();
-
-        aws.DataClient.getListOfQueryObjects(projectName, function(result) {
-            
-        	//TODO testing find better way to do this
-        	that.dataObject.listofQueryObjectsInProject = result[0];
-        	that.dataObject.queryNames = result[1];
-        	that.dataObject.projectDescription = result[2];
-        	
-        	scope.$safeApply(function() {
-                deferred.resolve(result);
-            });
-        	
-        });
+    	var params = {};
+    	params.projectName = projectName;
+    	aws.queryService(projectManagementURL, 'delegateToMethods', ['REPORT_QUERY_OBJECTS', params], function(result){
+    		that.dataObject.listOfProjectsFromDatabase = result;
+    		
+    		console.log("yellow5", result);
+    		
+    		scope.$safeApply(function() {
+    			 deferred.resolve(result);
+    		    		
+    	 });
+    	});
+//        aws.DataClient.getListOfQueryObjects(projectName, function(result) {
+//            
+//        	//TODO testing find better way to do this
+//        	that.dataObject.listofQueryObjectsInProject = result[0];
+//        	that.dataObject.queryNames = result[1];
+//        	that.dataObject.projectDescription = result[2];
+//        	
+//        	scope.$safeApply(function() {
+//                deferred.resolve(result);
+//            });
+//        	
+//        });
         
         return deferred.promise;
         
