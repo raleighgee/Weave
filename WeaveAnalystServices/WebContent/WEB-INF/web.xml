@@ -12,7 +12,7 @@
   
   <servlet>
     <servlet-name>ComputationalServlet</servlet-name>
-    <servlet-class>com.weave.servlets.ComputationalServlet</servlet-class>
+    <servlet-class>weave.servlets.ComputationalServlet</servlet-class>
   </servlet>
   <servlet-mapping>
     <servlet-name>ComputationalServlet</servlet-name>
@@ -21,7 +21,7 @@
 
 <servlet>
     <servlet-name>ProjectManagementServlet</servlet-name>
-    <servlet-class>com.weave.servlets.ProjectManagementServlet</servlet-class>
+    <servlet-class>weave.servlets.ProjectManagementServlet</servlet-class>
   </servlet>
   <servlet-mapping>
     <servlet-name>ProjectManagementServlet</servlet-name>
@@ -30,7 +30,7 @@
 
   <servlet>
     <servlet-name>ScriptManagementServlet</servlet-name>
-    <servlet-class>com.weave.servlets.ScriptManagementServlet</servlet-class>
+    <servlet-class>weave.servlets.ScriptManagementServlet</servlet-class>
   </servlet>
   <servlet-mapping>
     <servlet-name>ScriptManagementServlet</servlet-name>

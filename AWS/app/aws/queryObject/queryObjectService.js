@@ -13,7 +13,7 @@
 
 //var scriptManagementURL = '/WeaveAnalystServices/ScriptManagementServlet';
 
-//var projectManagementURL = '/WeaveAnalystServices/ProjectManagementServlet';
+var projectManagementURL = '/WeaveAnalystServices/ProjectManagementServlet';
 
 //angular.module("aws.queryObject", [])
 QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
@@ -82,25 +82,25 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
     this.getListOfProjectsfromDatabase = function() {
  
     	var deferred = $q.defer();
-//    	aws.queryService(projectManagementURL, 'delegateToMethods', ['REPORT_PROJECTS', null], function(result){
-//    		that.dataObject.listOfProjectsFromDatabase = result;
-//    		
-//    		console.log("yellow", result);
-//    		
-//    		scope.$safeApply(function() {
-//    			 deferred.resolve(result);
-//    		    		
-//    	 });
-//    	});
-        aws.DataClient.getListOfProjectsFromDatabase(function(result) {
-            
-        	that.dataObject.listOfProjectsFromDatabase = result;
-        	
-        	scope.$safeApply(function() {
-                deferred.resolve(result);
-            });
-        	
-        });
+    	aws.queryService(projectManagementURL, 'delegateToMethods', ['REPORT_PROJECTS', null], function(result){
+    		that.dataObject.listOfProjectsFromDatabase = result;
+    		
+    		console.log("yellow", result);
+    		
+    		scope.$safeApply(function() {
+    			 deferred.resolve(result);
+    		    		
+    	 });
+    	});
+//        aws.DataClient.getListOfProjectsFromDatabase(function(result) {
+//            
+//        	that.dataObject.listOfProjectsFromDatabase = result;
+//        	
+//        	scope.$safeApply(function() {
+//                deferred.resolve(result);
+//            });
+//        	
+//        });
         
         return deferred.promise;
         

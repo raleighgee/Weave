@@ -1,18 +1,18 @@
-<project name="WeaveAnalystServices" basedir=".">
+<project name="WeaveAnalystServices" basedir="." default="dist">
     <echo message="Start ant build"/>
 	<path id="classpath">
         <fileset dir="lib" includes="**/*.jar"/>
 		<fileset dir="../WeaveServices/lib/" includes="**/*.jar"/>
         <fileset dir="../WeaveServletUtils/lib/" includes="**/*.jar"/>
-        <pathelement path="../WeaveServletUtils/bin/classes"/>
-        <fileset dir="/usr/share/java/" includes="junit4.jar"/>
-        <fileset dir="/usr/share/java/" includes="servlet-api-2.5.jar"/>
+		<pathelement path="../WeaveServletUtils/bin/classes"/>
+        <pathelement path="../WeaveServices/bin/classes"/>
+        <fileset dir="lib" includes="servlet-api.jar"/>
     </path>
 	<echo message="Done setting path"/>
     <target name="clean">
     	<echo message="Deleting..."/>
         <!--<delete dir="build"/>-->
-		<!--<delete dir="bin"/>-->
+		<delete dir="bin"/>
     </target>
 	<echo message="Done cleaning"/>
     <target name="build" depends="clean">
@@ -21,6 +21,7 @@
         <javac srcdir="src" destdir="bin/classes" classpathref="classpath"
                 debug="true"
                 debuglevel="lines,vars,source"/>
+    	
         <copy file="../WeaveServices/src/weave/config/sqlconfig.dtd" tofile="build/classes/weave/config/sqlconfig.dtd"/>
     </target>
     <target name="dist" depends="build">
