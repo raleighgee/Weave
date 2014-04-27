@@ -193,11 +193,6 @@ public class RService extends WeaveServlet
 		return RServiceUsingRserve.linearRegression( docrootPath, method, dataX, dataY, polynomialDegree);
 	}
 	
-	public Object normalize(Object[][] array) throws RemoteException
-	{
-		return RServiceUsingRserve.normalize(docrootPath, array);
-	}
-
 	public Object normalize(Object[][] data) throws RemoteException
 	{
 		return RServiceUsingRserve.normalize(docrootPath, data);

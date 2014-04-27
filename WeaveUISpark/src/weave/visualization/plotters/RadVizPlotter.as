@@ -257,7 +257,7 @@ package weave.visualization.plotters
 			var keySources:Array = columns.getObjects();
 			if (keySources.length > 0) 
 			{
-				keySources.unshift(radiusColumn);
+				keySources.push(radiusColumn);
 				setColumnKeySources(keySources, [true]);
 				
 				for each( var key:IQualifiedKey in filteredKeySet.keys)
@@ -1111,7 +1111,7 @@ package weave.visualization.plotters
 						length--;
 						i--;
 					}
-					sampledArray.unshift(titleRow); // we put the title row back here..
+					sampledArray.push(titleRow); // we put the title row back here..
 					originalArray.length = 0; // we clear this array since we don't need it anymore.
 					// Sampling is done. we wrap it back into a CSVDataSource
 					
@@ -1139,8 +1139,8 @@ package weave.visualization.plotters
 							i--;
 						}
 						transposedSampledArray.splice(0);
-						sampledArray.unshift(secondColumn);
-						sampledArray.unshift(firstColumn);
+						sampledArray.push(secondColumn);
+						sampledArray.push(firstColumn);
 						var temp:Array = sampledArray; // quick older for the sample array to be transposed again
 						sampledArray = transposeDataArray(temp); // at this stage we should have a complete row and column sample
 					}
@@ -1217,7 +1217,7 @@ package weave.visualization.plotters
 			var linkLengths:Array = [];
 			var fixed_cols:Array = annCenterColumns.slice();
 			var mov_cols:Array = pointSensitivityColumns.slice();
-			var da_positions:Array = [];
+			var targets:Array = [];
 			
 			// compute the link lengths for a record
 			for (var i:Number = 0; i < mov_cols.length; i++)
@@ -1254,10 +1254,10 @@ package weave.visualization.plotters
 				var r:Number = degreesToRadians(Math.random()*360);
 				var t:Point = new Point(Math.cos(r) * current_circle_radius + current_circle_center.x, Math.sin(r) * current_circle_radius + current_circle_center.y);
 				target_next = t;
-				da_positions.push(t);
+				targets.unshift(t);
 			} else {
 				target_next = select_intersection(intersections);
-				da_positions.push(target);
+				targets.unshift(target);
 			}
 			
 			while(linkLengths.length > 2)
@@ -1274,13 +1274,19 @@ package weave.visualization.plotters
 				current_circle_radius = current_link;
 				
 				intersections = annulus_circle_intersection(ann_center, ann_inner_radius, ann_outer_radius, current_circle_center, current_circle_radius);
-				if(!intersections.length)
-				{
-					return;
-				}
-				target_next = select_intersection(intersections);
 				
-				da_positions.push(target_next);
+				if(intersections.length == 1 && intersections[0].x == -1 && intersections[0].y == -1) {
+					// if that's the case, pick a random intersection
+					r = degreesToRadians(Math.random()*360);
+					t = new Point(Math.cos(r) * current_circle_radius + current_circle_center.x, Math.sin(r) * current_circle_radius + current_circle_center.y);
+					target_next = t;
+					targets.unshift(t);
+				} else {
+					target_next = select_intersection(intersections);
+					targets.unshift(target);
+				}
+				
+				//targets.push(target_next);
 					
 			}
 			
@@ -1297,13 +1303,25 @@ package weave.visualization.plotters
 				var circle_b_radius:Number = linkLengths[1];
 				
 				intersections = circle_circle_intersection(circle_a_center, circle_a_radius, circle_b_center, circle_b_radius);
-				target_next = select_intersection(intersections);
-				da_positions.push(target_next);
-				da_positions.push(circle_a_center);
+
+				if(intersections.length == 1 && intersections[0].x == -1 && intersections[0].y == -1) {
+					// if that's the case, pick a random intersection
+					r = degreesToRadians(Math.random()*360);
+					t = new Point(Math.cos(r) * current_circle_radius + current_circle_center.x, Math.sin(r) * current_circle_radius + current_circle_center.y);
+					target_next = t;
+					targets.unshift(t);
+				} else {
+					target_next = select_intersection(intersections);
+					targets.unshift(target);
+				}
+				
+				//target_next = select_intersection(intersections);
+				//targets.unshift(target_next);
+				targets.unshift(circle_a_center);
 				
 			}
 			
-			var angles:Array = da_angles(da_positions);
+			var angles:Array = da_angles(targets);
 			
 			var theta:Number;
 			var anchor:AnchorPoint;
