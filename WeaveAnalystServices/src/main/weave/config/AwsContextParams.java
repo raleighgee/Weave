@@ -21,7 +21,6 @@ public class AwsContextParams
 	private AwsContextParams(ServletContext  context) throws ServletException
 	{
 		awsConfigPath = context.getRealPath(context.getInitParameter("awsconfigPath")).replace('\\','/');
-		//awsConfigPath = WeaveContextParams.getInstance(context).getConfigPath() + "/../aws-config/";
 		rScriptsPath= awsConfigPath + "RScripts/";
 		stataScriptsPath = awsConfigPath + "StataScripts/";
 	}

@@ -9,7 +9,7 @@
 
 var dataServiceURL = '/WeaveServices/DataService';
 
-
+var adminServiceURL = '/WeaveServices/AdminService';
 
 var scriptManagementURL = '/WeaveAnalystServices/ScriptManagementServlet';
 
@@ -174,12 +174,12 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
      * This function wraps the async aws deleteQueryObject function into an angular defer/promise
      * So that the UI asynchronously wait for the data to be available...
      */
-    this.deleteQueryObject = function(projectName, queryObjectName) {
+    this.deleteQueryObject = function(projectName, queryObjectTitle) {
           	
     	var deferred = $q.defer();
     	var params = {};
     	params.projectName = projectName;
-    	params.queryObjectName = queryObjectName;
+    	params.queryObjectTitle = queryObjectTitle;
     	
     	aws.queryService(projectManagementURL, 'delegateToMethods', ['DELETE_QUERY_OBJECT', params], function(result){
     		that.dataObject.deleteQueryObjectStatus = result;//returns a boolean which states if the query has been deleted(true)
@@ -290,19 +290,25 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
     	this.getDataColumnsEntitiesFromId = function(id, forceUpdate) {
             
     		var deferred = $q.defer();
+    		aws.queryService(dataServiceURL, "getEntityChildIds", [id], function(idsArray) {
+              scope.$safeApply(function() {
+              deferred.resolve(idsArray);
+          });
+      });
     		
-            aws.DataClient.getEntityChildIds(id, function(idsArray) {
-                scope.$safeApply(function() {
-                    deferred.resolve(idsArray);
-                });
-            });
+//            aws.DataClient.getEntityChildIds(id, function(idsArray) {
+//                scope.$safeApply(function() {
+//                    deferred.resolve(idsArray);
+//                });
+//            });
             
             var deferred2 = $q.defer();
             
             deferred.promise.then(function(idsArray) {
             	
-            	aws.DataClient.getDataColumnEntities(idsArray, function(dataEntityArray) {
-            		
+            	
+            	aws.queryService(dataServiceURL, "getEntitiesById", [idsArray], function (dataEntityArray){
+            	//aws.DataClient.getDataColumnEntities(idsArray, function(dataEntityArray) {
             		that.dataObject.columns = dataEntityArray;
             		
             		scope.$safeApply(function() {
@@ -325,7 +331,8 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
  
     		var deferred = $q.defer();
     		
-            aws.DataClient.getEntityIdsByMetadata({"dataType":"geometry"}, function(idsArray) {
+    		aws.queryService(dataServiceURL, "getEntityIdsByMetadata", [{"dataType":"geometry"}, 1], function(idsArray){
+            //aws.DataClient.getEntityIdsByMetadata({"dataType":"geometry"}, function(idsArray) {
                 scope.$safeApply(function() {
                     deferred.resolve(idsArray);
                 });
@@ -335,7 +342,8 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
             
             deferred.promise.then(function(idsArray) {
             	
-            	aws.DataClient.getDataColumnEntities(idsArray, function(dataEntityArray) {
+            	aws.queryService(dataServiceURL, "getEntitiesById", [ids], function(dataEntityArray){
+            	//aws.DataClient.getDataColumnEntities(idsArray, function(dataEntityArray) {
                     that.dataObject.geometryColumns = dataEntityArray;
                     
             		scope.$safeApply(function() {
@@ -370,21 +378,45 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
         
         this.getDataMapping = function(varValues){
         	var deferred = $q.defer();
-            
-            aws.DataClient.getDataMapping(varValues, function(result){
-                
-            	scope.$safeApply(function(){
-                    deferred.resolve(result);
-                });
-            });
+        	
+        	callback = function(result){
+        		scope.$safeApply(function(){
+                  deferred.resolve(result);
+        	});
+        	
+        	if (Array.isArray(varValues))
+        	{
+        		setTimeout(function(){ callback(varValues); }, 0);
+        		return;
+        	}
+        	
+        	if (typeof varValues == 'string')
+        		varValues = {"aws_id": varValues};
+        	aws.queryService(dataServiceURL, 'getColumn', [varValues, NaN, NaN, null],
+            		function(columnData) {
+            			var result = [];
+            			for (var i in columnData.keys)
+            				result[i] = {"value": columnData.keys[i], "label": columnData.data[i]};
+            			callback(result);
+            		}
+            	);
+//            aws.DataClient.getDataMapping(varValues, function(result){
+//                
+//            	scope.$safeApply(function(){
+//                    deferred.resolve(result);
+//                });
+//            });
             return deferred.promise;
         };
         
+      };
+      
+      
         this.updateEntity = function(user, password, entityId, diff) {
 
         	var deferred = $q.defer();
-            
-            aws.AdminClient.updateEntity(user, password, entityId, diff, function(){
+        	aws.queryService(adminServiceURL, "updateEntity", [user, password, entityId, diff], function(){
+            //aws.AdminClient.updateEntity(user, password, entityId, diff, function(){
                 
             	scope.$safeApply(function(){
                     deferred.resolve();
@@ -393,23 +425,48 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
             return deferred.promise;
         };
         
-        this.getDataSetFromTableId = function(id, forceUpdate){
+        //works with js clients
+//        this.getDataSetFromTableId = function(id, forceUpdate){
+//        	var deferred = $q.defer();
+//        	
+//        	if(!forceUpdate && this.dataObject.hasOwnProperty("geographyMetadata")) {
+//        		return this.dataObject.geographyMetadata;
+//        	} else {
+//        		aws.DataClient.getDataSetFromTableId(id, function(result) {
+//        			that.dataObject.geographyMetadata = result;
+//        			scope.$safeApply(function(){
+//        				deferred.resolve();
+//        			});
+//        		});
+//        		return deferred.promise;
+//        	}
+//        };
+        
+        
+        
+        this.getDataSetFromTableId = function(id,forceUpdate){
         	var deferred = $q.defer();
         	
         	if(!forceUpdate && this.dataObject.hasOwnProperty("geographyMetadata")) {
         		return this.dataObject.geographyMetadata;
-        	} else {
-        		aws.DataClient.getDataSetFromTableId(id, function(result) {
-        			that.dataObject.geographyMetadata = result;
-        			scope.$safeApply(function(){
-        				deferred.resolve();
+        	} else 
+        	{
+        		aws.queryService(dataServiceURL, "getEntityChildIds", [id], function(ids){
+        			
+        			aws.queryService(dataServiceURL, "getDataSet", [ids], function(result){
+        				that.dataObject.geographyMetadata = result;
+            			scope.$safeApply(function(){
+            				deferred.resolve();
+            			});
         			});
         		});
+        	
         		return deferred.promise;
+        		
         	}
-        };
         
-      
+       }; 
+       
          // Source: http://www.bennadel.com/blog/1504-Ask-Ben-Parsing-CSV-Strings-With-Javascript-Exec-Regular-Expression-Command.htm
          // This will parse a delimited string into an array of
          // arrays. The default delimiter is the comma, but this

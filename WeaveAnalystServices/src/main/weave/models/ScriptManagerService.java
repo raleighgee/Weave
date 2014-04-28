@@ -23,17 +23,11 @@ import weave.config.AwsContextParams;
 public class ScriptManagerService extends WeaveServlet{
 
 	private static final long serialVersionUID = 1L;
-	private static String awsConfigPath = "";
+	//private static String awsConfigPath = "";
 	
 	public ScriptManagerService(){
 		
 	}
-	
-	public void init(ServletConfig config) throws ServletException {
-		super.init(config);
-		awsConfigPath = AwsContextParams.getInstance(config.getServletContext()).getAwsConfigPath();
-	}
-	
 	
 	/**
 	 * Gives an object containing the script contents
@@ -41,7 +35,7 @@ public class ScriptManagerService extends WeaveServlet{
 	 * @param scriptName
 	 * @return
 	 */
-	public static String getScript(Map<String, Object> params) throws Exception{
+	public static String getScript(String awsConfigPath, Map<String, Object> params) throws Exception{
     	File directory = new File(awsConfigPath, "RScripts");
 		String[] files = directory.list();
 		String scriptContents = new String();
@@ -73,11 +67,11 @@ public class ScriptManagerService extends WeaveServlet{
 		return scriptContents;
     }
 
-	public static String[] getListOfScripts() {
+	public static String[] getListOfScripts(String awsConfigPath) {
 
 		File directory = new File(awsConfigPath, "RScripts");
 		String[] files = directory.list();
-		List<String> rFiles = new ArrayList<String>();
+		List<String> rFiles = new ArrayList<String>(); 
 		String extension = "";
 
 		for (int i = 0; i < files.length; i++) {
@@ -89,7 +83,7 @@ public class ScriptManagerService extends WeaveServlet{
 		return rFiles.toArray(new String[rFiles.size()]);
 	}
 
-	public static String saveMetadata(Map<String,Object>params) throws Exception {
+	public static String saveMetadata(String awsConfigPath,Map<String,Object>params) throws Exception {
 		String status = "";
 		String scriptName = params.get("scriptName").toString();
 		Object scriptMetadata = params.get("scriptMetadata");
@@ -114,7 +108,7 @@ public class ScriptManagerService extends WeaveServlet{
 		return status;
 	}
 
-	public static Object getScriptMetadata(Map<String,Object> params) throws Exception {
+	public static Object getScriptMetadata(String awsConfigPath, Map<String,Object> params) throws Exception {
 		File directory = new File(awsConfigPath, "RScripts");
 		String[] files = directory.list();
 		String scriptName = params.get("scriptName").toString();
@@ -158,7 +152,7 @@ public class ScriptManagerService extends WeaveServlet{
 		return scriptMetadata;
 	}
 	
-	public static Boolean uploadNewScript(Map<String, Object> params){
+	public static Boolean uploadNewScript(String awsConfigPath, Map<String, Object> params){
 		String scriptName = params.get("scriptName").toString();
 		Object fileObject = params.get("fileObject");
 		File file = new File(awsConfigPath + "RScripts", scriptName);

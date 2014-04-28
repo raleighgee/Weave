@@ -21,7 +21,7 @@ public class AwsRService extends RServiceUsingRserve implements IScriptEngine
 {
 	private static final long serialVersionUID = 1L;
 	
-	private static String awsConfigPath = "";
+	
 	
 	public AwsRService(){
 		
@@ -104,7 +104,7 @@ public class AwsRService extends RServiceUsingRserve implements IScriptEngine
 		else
 			evalValue =  rConnection.eval("try({ options(warn=1) \n" + script + "},silent=TRUE)");
 
-		return evalValue;
+	return evalValue;
 	}
 
 	private static Vector<RResult> evaluateWithTypeChecking(RConnection rConnection, String script, Vector<RResult> newResultVector, boolean showIntermediateResults, boolean showWarnings ) throws ScriptException, RserveException, REXPMismatchException 
