@@ -38,8 +38,8 @@ aws.RClient.prototype.run = function(type, callback) {
 	} else if (type == "JavaSQLData") {
 		this.runScriptWithFilteredColumns(callback);
 	}
-	if (type == "runScriptWithFilteredColumns") {
-		this.runScriptWithFilteredColumns(callback);
+	if (type == "runScript") {
+		this.runScript(callback);
 	}
 	//return resultString;
 };
@@ -124,6 +124,6 @@ aws.RClient.prototype.retriveResultsFromDatabase = function(requestObject){
  *	@return void.
  *
  */
-aws.RClient.prototype.runScriptWithFilteredColumns = function(callback) {
-	aws.queryService(rServiceURL, 'runScriptWithFilteredColumns', this.rRequestObject, callback);
+aws.RClient.prototype.runScript = function(callback) {
+	aws.queryService(rServiceURL, 'runScript', this.rRequestObject, callback);
 };

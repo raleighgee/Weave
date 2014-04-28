@@ -25,7 +25,6 @@ aws.QueryHandler = function(queryObject)
 	
 	this.rRequestObject = {};
 	this.rRequestObject.scriptName = "";
-	this.rRequestObject.dataRequest = {};
 	
 	if(queryObject.hasOwnProperty("scriptSelected")) {
 		if (queryObject.scriptSelected != "") {
@@ -252,17 +251,23 @@ aws.QueryHandler.prototype.runQuery = function() {
 	}
 	
 	if(newWeaveWindow.log) {
-		newWeaveWindow.log("Running Query in R...");
+		newWeaveWindow.log("Running Query...");
 	};
 	
 	console.log(this.rRequestObject);
 	this.ComputationEngine.run("runScript", function(result) {	
 		aws.timeLogString = "";
 		that.resultDataSet = result.data[0].value;
-		$("#LogBox").append('<p>' + "Data Load Time: " + result.times[0]/1000 + " seconds.\n" + '</p>');
-		$("#LogBox").append("Script Computation Time: " + result.times[1] / 1000 + " seconds." + '</p>');
-
-		newWeaveWindow.workOnData(that, result.data[0].value);
+		newWeaveWindow.log("Load Time : " + result.times[0] + "secs,  Analysis Time: " + result.times[1]);
+		
+		// adding a check for extension here because script results are slightly different
+		// in R and Stata
+		if(that.rRequestObject.scriptName.split(".").pop().toLowerCase() == 'r') {
+			newWeaveWindow.workOnData(that, result.data[0].value);
+		} else {
+			newWeaveWindow.workOnData(that, result.data);
+		}
+		
 		
 		// step 2
 		//var dataSourceName = that.weaveClient.addCSVDataSourceFromString(that.resultDataSet, "", that.keyType, "fips");

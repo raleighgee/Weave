@@ -345,7 +345,7 @@ public class AWSRService extends RService
 		else if(getScriptType(scriptName) == SCRIPT_TYPE.STATA)
 		{
 			endTime = System.currentTimeMillis(); // end timer for data request
-			time1 = startTime - endTime;
+			time1 = endTime - startTime;
 			// Run and time the script
 			startTime = System.currentTimeMillis();
 			resultData = runStataScript(scriptName, recordData, programPath, tempDirPath, stataScriptsPath);
