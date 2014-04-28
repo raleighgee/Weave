@@ -258,7 +258,7 @@ aws.QueryHandler.prototype.runQuery = function() {
 	this.ComputationEngine.run("runScript", function(result) {	
 		aws.timeLogString = "";
 		that.resultDataSet = result.data[0].value;
-		newWeaveWindow.log("Load Time : " + result.times[0] + "secs,  Analysis Time: " + result.times[1]);
+		newWeaveWindow.log("Load Time : " + result.times[0]/1000 + " secs,  Analysis Time: " + result.times[1]/1000 + " secs");
 		
 		// adding a check for extension here because script results are slightly different
 		// in R and Stata
