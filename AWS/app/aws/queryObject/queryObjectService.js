@@ -47,7 +47,7 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
     	var deferred = $q.defer();
     	
     	//testing for re-factoring(removing clients)
-    	aws.queryService(scriptManagementURL,'delegateToScriptManagementMethods', ["REPORT_SCRIPTS_LIST",null],  function(result) {
+    	aws.queryService(scriptManagementURL,'getListOfScripts', null,  function(result) {
             
         	that.dataObject.listOfScripts = result;
         	console.log("removing clients", result);
@@ -58,19 +58,6 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
         	
         });
 
-    	//works
-//        aws.RClient.getListOfScripts(function(result) {
-//            
-//        	that.dataObject.listOfScripts = result;
-//        	
-//        	// since this function executes async in a future turn of the event loop, we need to wrap
-//            // our code into an $apply call so that the model changes are properly observed.
-//        	scope.$apply(function() {
-//                deferred.resolve(result);
-//            });
-//        	
-//        });
-        
         // regardless of when the promise was or will be resolved or rejected,
         // then calls one of the success or error callbacks asynchronously as soon as the result
         // is available. The callbacks are called with a single argument: the result or rejection reason.
@@ -80,18 +67,9 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
     
     
     this.getListOfProjectsfromDatabase = function() {
-//      aws.DataClient.getListOfProjectsFromDatabase(function(result) {
-//      
-//  	that.dataObject.listOfProjectsFromDatabase = result;
-//  	
-//  	scope.$safeApply(function() {
-//          deferred.resolve(result);
-//      });
-//  	
-//  });
  
     	var deferred = $q.defer();
-    	aws.queryService(projectManagementURL, 'delegateToMethods', ['REPORT_PROJECTS', null], function(result){
+    	aws.queryService(projectManagementURL, 'getProjectListFromDatabase',null , function(result){
     		that.dataObject.listOfProjectsFromDatabase = result;
     		
     		console.log("yellow", result);
@@ -117,22 +95,14 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
     	params.queryObjectTitle= queryObjectTitle;
     	params.queryObjectContent = queryObjectContent;
     	
-    	aws.queryService(projectManagementURL, 'delegateToMethods', ['INSERT_QUERY_OBJECTS', params], function(result){
+    	aws.queryService(projectManagementURL, 'insertMultipleQueryObjectInProjectFromDatabase', [params], function(result){
     		that.dataObject.insertQueryObjectStatus = result;//returns an integer telling us the number of row(s) added
         	scope.$safeApply(function() {
                 deferred.resolve(result);
             });
         	
         });
-//        aws.DataClient.insertQueryObject(userName, projectName, projectDescription,queryObjectTitle,  queryObjectContent, function(result) {
-//        	//console.log("insertQueryObjectStatus", result);
-//        	that.dataObject.insertQueryObjectStatus = result;//returns an integer telling us the number of row(s) added
-//        	scope.$safeApply(function() {
-//                deferred.resolve(result);
-//            });
-//        	
-//        });
-        
+
         return deferred.promise;
         
     };
@@ -147,7 +117,7 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
     	
     	var params = {};
     	params.projectName = projectName;
-    	aws.queryService(projectManagementURL, 'delegateToMethods', ['DELETE_PROJECT', params], function(result){
+    	aws.queryService(projectManagementURL, 'deleteProjectFromDatabase', [params], function(result){
     		that.dataObject.deleteProjectStatus = result;//returns an integer telling us the number of row(s) deleted
         	scope.$safeApply(function() {
                 deferred.resolve(result);
@@ -155,16 +125,7 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
         	
         });
 
-//        aws.DataClient.deleteProject(projectName, function(result) {
-//        	console.log("deleteProjectStatus", result);
-//            
-//        	that.dataObject.deleteProjectStatus = result;//returns an integer telling us the number of row(s) deleted
-//        	scope.$safeApply(function() {
-//                deferred.resolve(result);
-//            });
-//        	
-//        });
-        
+
         return deferred.promise;
         
     };
@@ -181,21 +142,14 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
     	params.projectName = projectName;
     	params.queryObjectTitle = queryObjectTitle;
     	
-    	aws.queryService(projectManagementURL, 'delegateToMethods', ['DELETE_QUERY_OBJECT', params], function(result){
+    	aws.queryService(projectManagementURL, 'deleteQueryObjectFromProjectFromDatabase', [params], function(result){
     		that.dataObject.deleteQueryObjectStatus = result;//returns a boolean which states if the query has been deleted(true)
         	scope.$safeApply(function() {
                 deferred.resolve(result);
             });
         	
         });
-//        aws.DataClient.deleteQueryObject(projectName,queryObjectName, function(result) {
-//        	that.dataObject.deleteQueryObjectStatus = result;//returns a boolean which states if the query has been deleted(true)
-//        	scope.$safeApply(function() {
-//                deferred.resolve(result);
-//            });
-//        	
-//        });
-        
+
         return deferred.promise;
         
     };
@@ -209,7 +163,7 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
     	var deferred = $q.defer();
     	var params = {};
     	params.projectName = projectName;
-    	aws.queryService(projectManagementURL, 'delegateToMethods', ['REPORT_QUERY_OBJECTS', params], function(result){
+    	aws.queryService(projectManagementURL, 'getQueryObjectsFromDatabase', [params], function(result){
     		//TODO testing find better way to do this
         	that.dataObject.listofQueryObjectsInProject = result[0];
         	that.dataObject.queryNames = result[1];
@@ -220,19 +174,7 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
             });
         	
         });
-//        aws.DataClient.getListOfQueryObjects(projectName, function(result) {
-//            
-//        	//TODO testing find better way to do this
-//        	that.dataObject.listofQueryObjectsInProject = result[0];
-//        	that.dataObject.queryNames = result[1];
-//        	that.dataObject.projectDescription = result[2];
-//        	
-//        	scope.$safeApply(function() {
-//                deferred.resolve(result);
-//            });
-//        	
-//        });
-        
+
         return deferred.promise;
         
     };
@@ -251,10 +193,7 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
         	}
         }
         
-        var params = {};
-        params.scriptName = scriptName;
-        
-        aws.queryService(scriptManagementURL, 'delegateToScriptManagementMethods', ['REPORT_SCRIPT_METADATA', params], function(result){
+        aws.queryService(scriptManagementURL, 'getScriptMetadata', {scriptName : scriptName}, function(result){
         	that.dataObject.scriptMetadata = result;
         	// since this function executes async in a future turn of the event loop, we need to wrap
             // our code into an $apply call so that the model changes are properly observed.
@@ -263,19 +202,7 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
             });
         });
         
-        
-        
-        
-//        aws.RClient.getScriptMetadata(scriptName, function(result) {
-//        	
-//        	that.dataObject.scriptMetadata = result;
-//        	// since this function executes async in a future turn of the event loop, we need to wrap
-//            // our code into an $apply call so that the model changes are properly observed.
-//            scope.$safeApply(function() {
-//                deferred.resolve(result);
-//            });
-//        });
-//      
+  
         // regardless of when the promise was or will be resolved or rejected,
  	    // then calls one of the success or error callbacks asynchronously as soon as the result
      	// is available. The callbacks are called with a single argument: the result or rejection reason.
@@ -296,19 +223,13 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
           });
       });
     		
-//            aws.DataClient.getEntityChildIds(id, function(idsArray) {
-//                scope.$safeApply(function() {
-//                    deferred.resolve(idsArray);
-//                });
-//            });
-            
+  
             var deferred2 = $q.defer();
             
             deferred.promise.then(function(idsArray) {
             	
             	
             	aws.queryService(dataServiceURL, "getEntitiesById", [idsArray], function (dataEntityArray){
-            	//aws.DataClient.getDataColumnEntities(idsArray, function(dataEntityArray) {
             		that.dataObject.columns = dataEntityArray;
             		
             		scope.$safeApply(function() {
@@ -332,7 +253,6 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
     		var deferred = $q.defer();
     		
     		aws.queryService(dataServiceURL, "getEntityIdsByMetadata", [{"dataType":"geometry"}, 1], function(idsArray){
-            //aws.DataClient.getEntityIdsByMetadata({"dataType":"geometry"}, function(idsArray) {
                 scope.$safeApply(function() {
                     deferred.resolve(idsArray);
                 });
@@ -343,7 +263,6 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
             deferred.promise.then(function(idsArray) {
             	
             	aws.queryService(dataServiceURL, "getEntitiesById", [ids], function(dataEntityArray){
-            	//aws.DataClient.getDataColumnEntities(idsArray, function(dataEntityArray) {
                     that.dataObject.geometryColumns = dataEntityArray;
                     
             		scope.$safeApply(function() {
@@ -400,13 +319,8 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
             			callback(result);
             		}
             	);
-//            aws.DataClient.getDataMapping(varValues, function(result){
-//                
-//            	scope.$safeApply(function(){
-//                    deferred.resolve(result);
-//                });
-//            });
-            return deferred.promise;
+
+        	return deferred.promise;
         };
         
       };
@@ -416,8 +330,6 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
 
         	var deferred = $q.defer();
         	aws.queryService(adminServiceURL, "updateEntity", [user, password, entityId, diff], function(){
-            //aws.AdminClient.updateEntity(user, password, entityId, diff, function(){
-                
             	scope.$safeApply(function(){
                     deferred.resolve();
                 });
@@ -425,24 +337,7 @@ QueryObject.service("queryService", ['$q', '$rootScope', function($q, scope) {
             return deferred.promise;
         };
         
-        //works with js clients
-//        this.getDataSetFromTableId = function(id, forceUpdate){
-//        	var deferred = $q.defer();
-//        	
-//        	if(!forceUpdate && this.dataObject.hasOwnProperty("geographyMetadata")) {
-//        		return this.dataObject.geographyMetadata;
-//        	} else {
-//        		aws.DataClient.getDataSetFromTableId(id, function(result) {
-//        			that.dataObject.geographyMetadata = result;
-//        			scope.$safeApply(function(){
-//        				deferred.resolve();
-//        			});
-//        		});
-//        		return deferred.promise;
-//        	}
-//        };
-        
-        
+
         
         this.getDataSetFromTableId = function(id,forceUpdate){
         	var deferred = $q.defer();

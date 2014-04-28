@@ -3,9 +3,12 @@ package weave.config;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 
+import org.apache.commons.io.FilenameUtils;
+
 public class AwsContextParams
 {
 	private static String awsConfigPath = "";
+	private static String StataPath = "";
 	private static String rScriptsPath = "";
 	private static String stataScriptsPath = "";
 	
@@ -21,8 +24,9 @@ public class AwsContextParams
 	private AwsContextParams(ServletContext  context) throws ServletException
 	{
 		awsConfigPath = context.getRealPath(context.getInitParameter("awsconfigPath")).replace('\\','/');
-		rScriptsPath= awsConfigPath + "RScripts/";
-		stataScriptsPath = awsConfigPath + "StataScripts/";
+		StataPath = context.getRealPath(context.getInitParameter("StataPath")).replace('\\','/');
+		rScriptsPath= FilenameUtils.concat(awsConfigPath, "RScripts");
+		stataScriptsPath = FilenameUtils.concat(awsConfigPath, "StataScripts");
 	}
 	
 	
@@ -34,6 +38,14 @@ public class AwsContextParams
 		return awsConfigPath;
 	}
 
+	/**
+	 * @return The path where aws config files are stored, ending in "/"
+	 */
+	public String getStataPath(){
+
+		return StataPath;
+	}
+	
 	/**
 	 * @return The path where R scripts are uploaded ending in "/"
 	 */
