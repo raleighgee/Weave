@@ -13,7 +13,7 @@ goog.require('aws.WeaveClient');
  * @param {aws.queryObject} queryObject. The query object obtained from the UI, or alternatively, from a file.
  *
  **/
-
+var computationServiceURL = '/WeaveAnalystServices/ComputationalServlet';
 aws.QueryHandler = function(queryObject)
 {
 	// the idea here is that we "parse" the query Object into smaller entities (brokers) and use them as needed.
@@ -230,11 +230,11 @@ aws.QueryHandler = function(queryObject)
 	// computation client
 	this.ComputationEngine = null;
 	if(queryObject.ComputationEngine == 'r' || queryObject.ComputationEngine == 'R') {
-		//console.log(this.rRequestObject);
-		this.ComputationEngine = new aws.RClient(this.rRequestObject);
-	}// else if (queryObject.scriptType == 'stata') {
-//		// computationEngine = new aws.StataClient();
-
+		//this.ComputationEngine = new aws.RClient(this.rRequestObject);
+		
+		
+		
+	}
 	this.resultDataSet = "";
 };
 
@@ -262,8 +262,11 @@ aws.QueryHandler.prototype.runQuery = function() {
 		newWeaveWindow.log("Running Query in R...");
 	};
 	
-	console.log(this.rRequestObject);
-	this.ComputationEngine.run("runScriptWithFilteredColumns", function(result) {	
+	console.log(this.rRequestObject.scriptName);
+	console.log(this.rRequestObject.ids);
+	console.log(this.rRequestObject.filters);
+	
+	aws.queryService(computationServiceURL, 'runScript', [this.rRequestObject.scriptName, this.rRequestObject.ids, this.rRequestObject.filters], function(result){
 		aws.timeLogString = "";
 		that.resultDataSet = result.data[0].value;
 		$("#LogBox").append('<p>' + "Data Load Time: " + result.times[0]/1000 + " seconds.\n" + '</p>');
@@ -271,23 +274,17 @@ aws.QueryHandler.prototype.runQuery = function() {
 
 		newWeaveWindow.workOnData(that, result.data[0].value);
 		
-		// step 2
-		//var dataSourceName = that.weaveClient.addCSVDataSourceFromString(that.resultDataSet, "", that.keyType, "fips");
-		//var dataSourceName = that.weaveClient.addCSVDataSource(that.resultDataSet, "", that.keyType, "fips");
-		
-		// step 3
-//		for (var i in that.visualizations) {
-//			that.weaveClient.newVisualization(that.visualizations[i], dataSourceName);
-//			aws.timeLogString = aws.reportTime(that.visualizations[i].type + ' added');
-//			$("#LogBox").append('<p>' + aws.timeLogString + '</p>');
-//		}
-//		
-//		if (that.ColorColumn) {
-//			that.weaveClient.setColorAttribute(that.ColorColumn, dataSourceName);
-//			aws.timeLogString = aws.reportTime('color column added');
-//			$("#LogBox").append('<p>' + aws.timeLogString + '</p>');		
-//		}	
 	});
+	
+//	this.ComputationEngine.run("runScriptWithFilteredColumns", function(result) {	
+//		aws.timeLogString = "";
+//		that.resultDataSet = result.data[0].value;
+//		$("#LogBox").append('<p>' + "Data Load Time: " + result.times[0]/1000 + " seconds.\n" + '</p>');
+//		$("#LogBox").append("R Script Computation Time: " + result.times[1] / 1000 + " seconds." + '</p>');
+//
+//		newWeaveWindow.workOnData(that, result.data[0].value);
+//		
+//	});
 };
 
 aws.QueryHandler.prototype.clearWeave = function () {
