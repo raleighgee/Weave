@@ -345,7 +345,7 @@ public class AWSRService extends RService
 		else if(getScriptType(scriptName) == SCRIPT_TYPE.STATA)
 		{
 			endTime = System.currentTimeMillis(); // end timer for data request
-			
+			time1 = startTime - endTime;
 			// Run and time the script
 			startTime = System.currentTimeMillis();
 			resultData = runStataScript(scriptName, recordData, programPath, tempDirPath, stataScriptsPath);
@@ -661,10 +661,11 @@ public class AWSRService extends RService
 			tempScript += "insheet using " + dataSetCSV.getAbsolutePath() + ", clear" + "\n" +
 					"global path=\"" + tempDirPath + "\"\n" +
 					"cd \"$path/\" \n" +
-					"noisily do " + new File(FilenameUtils.concat(scriptPath, scriptName)).getPath() + "\n";
+					"noisily do " + new File(FilenameUtils.concat(scriptPath, scriptName)).getAbsolutePath() + "\n" +
+					"capture erase tempScript.log\n";
 					// "capture erase " +  tempDirPath + "tempScript.log";
 			
-			tempScriptFile = new File(FilenameUtils.concat(tempDirectory.getCanonicalPath(), "tempScript.do"));
+			tempScriptFile = new File(FilenameUtils.concat(tempDirectory.getAbsolutePath(), "tempScript.do"));
 			BufferedWriter out = new BufferedWriter(new FileWriter(tempScriptFile));
 			out.write(tempScript);
 			out.close();
@@ -677,13 +678,13 @@ public class AWSRService extends RService
 		
 		if(getOSType() == OS_TYPE.LINUX || getOSType() == OS_TYPE.OSX)
 		{
-			args = new String[] {programPath, "-b", "-q", "do", tempDirPath};
+			args = new String[] {programPath, "-b", "-q", "do", FilenameUtils.concat(tempDirPath, "tempScript.do")};
 			
 		}
 		
 		else if(getOSType() == OS_TYPE.WINDOWS)
 		{
-			args = new String[] {programPath, "/e", "/q", "do", tempDirPath};
+			args = new String[] {programPath, "/e", "/q", "do", FilenameUtils.concat(tempDirPath, "tempScript.do")};
 		}
 		
 		else if(getOSType() == OS_TYPE.UNKNOWN)
@@ -709,7 +710,7 @@ public class AWSRService extends RService
 		File logFile = new File(FilenameUtils.removeExtension(tempScriptFile.getAbsolutePath()).concat(".log"));
 		
 		// for now we assume result is always in result.csv
-		File scriptResult = new File(tempDirectory.getAbsolutePath() + "result.csv");
+		File scriptResult = new File(tempDirectory.getAbsolutePath(), "result.csv");
 		
 		if(logFile.exists()) {
 			// parse log file for ouput only
