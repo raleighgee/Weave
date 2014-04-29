@@ -641,6 +641,13 @@ public class AWSRService extends RService
 			tempDirectory.mkdir();
 		} 
 		
+		if(new File(tempDirectory.getAbsolutePath(), "result.csv").exists())
+		{
+			if(!new File(tempDirectory.getAbsolutePath(), "result.csv").delete()) {
+				throw new RemoteException("Cannot delete result.csv");
+			}
+		}
+		
 		try 
 		{
 			dataSetCSV = new File(FilenameUtils.concat(tempDirectory.getCanonicalPath(), "data.csv"));
@@ -661,9 +668,7 @@ public class AWSRService extends RService
 			tempScript += "insheet using " + dataSetCSV.getAbsolutePath() + ", clear" + "\n" +
 					"global path=\"" + tempDirPath + "\"\n" +
 					"cd \"$path/\" \n" +
-					"noisily do " + new File(FilenameUtils.concat(scriptPath, scriptName)).getAbsolutePath() + "\n" +
-					"capture erase tempScript.log\n";
-					// "capture erase " +  tempDirPath + "tempScript.log";
+					"noisily do " + new File(FilenameUtils.concat(scriptPath, scriptName)).getAbsolutePath() + "\n";
 			
 			tempScriptFile = new File(FilenameUtils.concat(tempDirectory.getAbsolutePath(), "tempScript.do"));
 			BufferedWriter out = new BufferedWriter(new FileWriter(tempScriptFile));
@@ -712,15 +717,15 @@ public class AWSRService extends RService
 		// for now we assume result is always in result.csv
 		File scriptResult = new File(tempDirectory.getAbsolutePath(), "result.csv");
 		
-		if(logFile.exists()) {
+		if(scriptResult.exists()) {
 			// parse log file for ouput only
-			String error = getErrorsFromStataLog(logFile);
-			throw new RemoteException("Error while running Stata script: " + error);
+			resultData = parser.parseCSV(scriptResult, true);
 		} else {
-			if(scriptResult.exists()) {
-				resultData = parser.parseCSV(scriptResult, true);
+			if(logFile.exists()) {
+				String error = getErrorsFromStataLog(logFile);
+				throw new RemoteException("Error while running Stata script: " + error);
 			} else {
-				throw new RemoteException("Could not find result.csv");
+				throw new RemoteException("Script did not produce result.csv and no log file found.");
 			}
 		}
 		return resultData;
