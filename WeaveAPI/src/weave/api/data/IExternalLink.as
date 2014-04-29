@@ -16,16 +16,15 @@
 package weave.api.data
 {
 	/**
-	 * Constants associated with different data types.
-	 * 
-	 * @author adufilie
+	 * This is an interface for an object which references a URL.
+	 * It is intended to be used in conjunction with IWeaveTreeNode.
 	 */
-	public class DataTypes
+	public interface IExternalLink
 	{
-		//public static const BOOLEAN:String = "boolean";
-		public static const NUMBER:String = "number";
-		public static const STRING:String = "string";
-		public static const DATE:String = "date";
-		public static const GEOMETRY:String = "geometry";
+		/**
+		 * Gets the URL associated with this object.
+		 * @return The URL.
+		 */
+		function getURL():String;
 	}
 }
