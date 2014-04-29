@@ -720,6 +720,7 @@ public class AWSRService extends RService
 		if(scriptResult.exists()) {
 			// parse log file for ouput only
 			resultData = parser.parseCSV(scriptResult, true);
+			scriptResult.delete();
 		} else {
 			if(logFile.exists()) {
 				String error = getErrorsFromStataLog(logFile);
