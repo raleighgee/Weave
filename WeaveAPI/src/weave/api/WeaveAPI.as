@@ -39,8 +39,6 @@ package weave.api
 	import weave.api.data.IStatisticsCache;
 	import weave.api.services.IURLRequestUtils;
 	import weave.utils.getExternalObjectID;
-	import weave.zip.CModule;
-	import weave.zip.mallocTest_AS3;
 
 	/**
 	 * Static functions for managing implementations of Weave framework classes.
@@ -49,12 +47,6 @@ package weave.api
 	 */
 	public class WeaveAPI
 	{
-		public static function test(size:uint):Object
-		{
-			var obj:Object = {ram: CModule.ram, pos: weave.zip.mallocTest_AS3(size)};
-			return obj;
-		}
-		
 		/**
 		 * For use with StageUtils.startTask(); this priority is used for things that must be done before anything else.
 		 * Tasks having this priority will take over the scheduler and prevent any other asynchronous task from running until it is completed.

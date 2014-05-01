@@ -19,13 +19,14 @@ package weave.api
 	import flash.utils.getQualifiedClassName;
 	import flash.utils.getTimer;
 	
+	import mx.utils.ObjectUtil;
+	
 	import nochump.util.zip.ZipEntry;
 	import nochump.util.zip.ZipFile;
 	import nochump.util.zip.ZipOutput;
 	
 	import weave.utils.OrderedHashMap;
-	import weave.zip.CModule;
-	import weave.zip.readZip;
+	import weave.zip.*;
 
 	/**
 	 * This is an interface for reading and writing data in the Weave file format.
@@ -63,11 +64,17 @@ package weave.api
 		 */		
 		private function _readArchive(fileData:ByteArray):void
 		{
-			
 			var t:int = getTimer();
-			trace('?', weave.zip.readZip(fileData));
-			trace('done', getTimer() - t);
-			fileData.position = 0;
+			var pzip:uint = weave.zip.openZip(fileData);
+			if (pzip)
+			{
+				for each (var fileName:String in weave.zip.listFiles(pzip))
+					trace(fileName, weave.zip.readFile(pzip, fileName).length);
+				trace('close', weave.zip.closeZip(pzip));
+				trace('done', getTimer() - t);
+				fileData.position = 0;
+			}
+			t = getTimer();
 			var zip:ZipFile = new ZipFile(fileData);
 			for (var i:int = 0; i < zip.entries.length; i++)
 			{
@@ -78,6 +85,7 @@ package weave.api
 				if (path[0] == FOLDER_AMF)
 					objects[path[1]] = zip.getInput(entry).readObject();
 			}
+			trace('done2', getTimer() - t);
 		}
 		
 		/**
