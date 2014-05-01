@@ -1,0 +1,2 @@
+cd "c:/weave/zipswc"
+make FLASCC=/cygdrive/c/flascc/sdk FLEX=/cygdrive/c/flex

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "AS3/AS3.h"
+#include <Flash++.h>
 
 void testme() __attribute__((used,
 		annotate("as3sig:public function testme(zipfile:ByteArray, output:ByteArray):void"),

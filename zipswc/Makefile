@@ -1,37 +1,5 @@
-FLASCC:=C:/flascc/sdk
-FLEX:=C:/flex
-AS3COMPILER:=asc2.jar
-BASE_CFLAGS:=-Werror -Wno-write-strings -Wno-trigraphs
+build:
+	"$(FLASCC)/usr/bin/g++" $(BASE_CFLAGS) -O4 as3api.cpp main.cpp -emit-swc=weave.zip -o zipswc.swc
 
-$?UNAME=$(shell uname -s)
-ifneq (,$(findstring CYGWIN,$(UNAME)))
-	$?nativepath=$(shell cygpath -at mixed $(1))
-	$?unixpath=$(shell cygpath -at unix $(1))
-else
-	$?nativepath=$(abspath $(1))
-	$?unixpath=$(abspath $(1))
-endif
-
-ifneq (,$(findstring "asc2.jar","$(AS3COMPILER)"))
-	$?AS3COMPILERARGS=java $(JVMARGS) -jar $(call nativepath,$(FLASCC)/usr/lib/$(AS3COMPILER)) -merge -md 
-else
-	echo "ASC is no longer supported" ; exit 1 ;
-endif
-
-all: check zipswc
-
-check:
-	@if [ -d $(FLASCC)/usr/bin ] ; then true ; \
-	else echo "Couldn't locate FLASCC sdk directory, please invoke make with \"make FLASCC=/path/to/FLASCC/sdk ...\"" ; exit 1 ; \
-	fi
-
-	@if [ -d "$(FLEX)/bin" ] ; then true ; \
-	else echo "Couldn't locate Flex sdk directory, please invoke make with \"make FLEX=/path/to/flex  ...\"" ; exit 1 ; \
-	fi
-
-zipswc:
-	"$(FLASCC)/usr/bin/g++" $(BASE_CFLAGS) src/zipswc.cpp -emit-swc=weave.utils -o bin/zipswc.swc
-
-pthread-test:
-	"$(FLASCC)/usr/bin/g++" $(BASE_CFLAGS) -pthread pthread_swc.cpp -emit-swc=sample.pthread -o pthread.swc
-	"$(FLEX)/bin/mxmlc" -library-path=pthread.swc -debug=true -swf-version=18 pthread_swc.as -o pthread_swc2.swf
+clean:
+	rm -f *.swf *.swc *.bc *.exe
