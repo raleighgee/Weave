@@ -18,7 +18,7 @@ else
 	echo "ASC is no longer supported" ; exit 1 ;
 endif
 
-all: check zipswc
+all: check zip
 
 check:
 	@if [ -d $(FLASCC)/usr/bin ] ; then true ; \
@@ -29,8 +29,8 @@ check:
 	else echo "Couldn't locate Flex sdk directory, please invoke make with \"make FLEX=/path/to/flex  ...\"" ; exit 1 ; \
 	fi
 
-zipswc:
-	"$(FLASCC)/usr/bin/g++" $(BASE_CFLAGS) src/zipswc.cpp -emit-swc=weave.utils -o bin/zipswc.swc
+zip:
+	"$(FLASCC)/usr/bin/g++" $(BASE_CFLAGS) zip/*.cpp -emit-swc=weave.zip -o zip.swc
 
 pthread-test:
 	"$(FLASCC)/usr/bin/g++" $(BASE_CFLAGS) -pthread pthread_swc.cpp -emit-swc=sample.pthread -o pthread.swc
