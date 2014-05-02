@@ -19,9 +19,9 @@
 #define tracef(...) {\
 	unsigned int __size = 256;\
 	char __cstr[__size];\
-    AS3_DeclareVar(__astr, String);\
-    AS3_CopyCStringToVar(__astr, __cstr, snprintf(__cstr, __size, __VA_ARGS__));\
-    AS3_Trace(__astr);\
+	AS3_DeclareVar(__astr, String);\
+	AS3_CopyCStringToVar(__astr, __cstr, snprintf(__cstr, __size, __VA_ARGS__));\
+	AS3_Trace(__astr);\
 }
 
 /**
@@ -43,17 +43,17 @@ void openZip()
 	inline_as3("CModule.ram.position = %0;" : : "r"(byteArray_c));
 	inline_as3("CModule.ram.writeBytes(byteArray);");
 
-    mz_zip_archive *zip_archive = (mz_zip_archive*)malloc(sizeof(zip_archive));
-    memset(zip_archive, 0, sizeof(mz_zip_archive));
+	mz_zip_archive *zip_archive = (mz_zip_archive*)malloc(sizeof(zip_archive));
+	memset(zip_archive, 0, sizeof(mz_zip_archive));
 
-    mz_bool status = mz_zip_reader_init_mem(zip_archive, (void*) byteArray_c, byteArray_len, 0);
-    if (!status)
-    {
-    	tracef("mz_zip_reader_init_mem() failed!");
-        AS3_Return(0);
-    }
+	mz_bool status = mz_zip_reader_init_mem(zip_archive, (void*) byteArray_c, byteArray_len, 0);
+	if (!status)
+	{
+		tracef("mz_zip_reader_init_mem() failed!");
+		AS3_Return(0);
+	}
 
-    AS3_Return(zip_archive);
+	AS3_Return(zip_archive);
 }
 
 /**
@@ -72,11 +72,11 @@ void listFiles()
 	AS3_DeclareVar(result, Array);
 	inline_as3("result = [];");
 	int n = mz_zip_reader_get_num_files(zip_archive);
-    for (unsigned int i = 0; i < n; i++)
-    {
-    	AS3_CopyCStringToVar(fileName, str, mz_zip_reader_get_filename(zip_archive, i, str, MZ_ZIP_MAX_ARCHIVE_FILENAME_SIZE) - 1);
-    	inline_as3("result.push(fileName);");
-    }
+	for (unsigned int i = 0; i < n; i++)
+	{
+		AS3_CopyCStringToVar(fileName, str, mz_zip_reader_get_filename(zip_archive, i, str, MZ_ZIP_MAX_ARCHIVE_FILENAME_SIZE) - 1);
+		inline_as3("result.push(fileName);");
+	}
 
 	AS3_ReturnAS3Var(result);
 }
@@ -88,10 +88,10 @@ void readObject()
 {
 	mz_zip_archive *zip_archive;
 	AS3_GetScalarFromVar(zip_archive, _zip_archive);
-    char *fileName;
-    AS3_MallocString(fileName, _fileName);
+	char *fileName;
+	AS3_MallocString(fileName, _fileName);
 
-    void* uncomp_file;
+	void* uncomp_file;
 	size_t uncomp_size;
 
 	uncomp_file = mz_zip_reader_extract_file_to_heap(zip_archive, fileName, &uncomp_size, MZ_ZIP_FLAG_CASE_SENSITIVE);
@@ -111,10 +111,10 @@ void readFile()
 {
 	mz_zip_archive *zip_archive;
 	AS3_GetScalarFromVar(zip_archive, _zip_archive);
-    char *fileName;
-    AS3_MallocString(fileName, _fileName);
+	char *fileName;
+	AS3_MallocString(fileName, _fileName);
 
-    void* uncomp_file;
+	void* uncomp_file;
 	size_t uncomp_size;
 
 	uncomp_file = mz_zip_reader_extract_file_to_heap(zip_archive, fileName, &uncomp_size, MZ_ZIP_FLAG_CASE_SENSITIVE);
@@ -157,32 +157,32 @@ void testZip()
 
 	//using namespace std;
 
-    mz_zip_archive zip_archive;
-    mz_bool status;
-    memset(&zip_archive, 0, sizeof (zip_archive));
+	mz_zip_archive zip_archive;
+	mz_bool status;
+	memset(&zip_archive, 0, sizeof (zip_archive));
 
-    status = mz_zip_reader_init_mem(&zip_archive, (void*) byteArray_c, byteArray_len, 0);
-    if (!status)
-    {
-    	tracef("mz_zip_reader_init_mem() failed!");
-        AS3_Return(false);
-    }
+	status = mz_zip_reader_init_mem(&zip_archive, (void*) byteArray_c, byteArray_len, 0);
+	if (!status)
+	{
+		tracef("mz_zip_reader_init_mem() failed!");
+		AS3_Return(false);
+	}
 
-    for (unsigned int i = 0; i < mz_zip_reader_get_num_files(&zip_archive); i++)
-    {
-        mz_zip_archive_file_stat file_stat;
-        if (!mz_zip_reader_file_stat(&zip_archive, i, &file_stat))
-        {
-        	tracef("mz_zip_reader_file_stat() failed!");
-            mz_zip_reader_end(&zip_archive);
-            AS3_Return(false);
-        }
+	for (unsigned int i = 0; i < mz_zip_reader_get_num_files(&zip_archive); i++)
+	{
+		mz_zip_archive_file_stat file_stat;
+		if (!mz_zip_reader_file_stat(&zip_archive, i, &file_stat))
+		{
+			tracef("mz_zip_reader_file_stat() failed!");
+			mz_zip_reader_end(&zip_archive);
+			AS3_Return(false);
+		}
 
-        tracef("ZIP Content - Filename: \"%s\", Comment: \"%s\", Uncompressed size: %u, Compressed size: %u", file_stat.m_filename, file_stat.m_comment, (unsigned int) file_stat.m_uncomp_size, (unsigned int) file_stat.m_comp_size);
+		tracef("ZIP Content - Filename: \"%s\", Comment: \"%s\", Uncompressed size: %u, Compressed size: %u", file_stat.m_filename, file_stat.m_comment, (unsigned int) file_stat.m_uncomp_size, (unsigned int) file_stat.m_comp_size);
 
-        const char* fn = file_stat.m_filename;
+		const char* fn = file_stat.m_filename;
 
-        void* uncomp_file;
+		void* uncomp_file;
 		size_t uncomp_size;
 
 		uncomp_file = mz_zip_reader_extract_file_to_heap(&zip_archive, file_stat.m_filename, &uncomp_size, 0);
@@ -190,14 +190,14 @@ void testZip()
 		{
 			tracef("mz_zip_reader_extract_file_to_heap() failed!");
 			mz_zip_reader_end(&zip_archive);
-	        AS3_Return(false);
+			AS3_Return(false);
 		}
 
 		free(uncomp_file);
-    }
+	}
 
 	mz_zip_reader_end(&zip_archive);
 	tracef("success");
 
-    AS3_Return(true);
+	AS3_Return(true);
 }
