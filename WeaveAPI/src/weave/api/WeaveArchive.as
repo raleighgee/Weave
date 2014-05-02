@@ -21,10 +21,6 @@ package weave.api
 	
 	import mx.utils.ObjectUtil;
 	
-	import nochump.util.zip.ZipEntry;
-	import nochump.util.zip.ZipFile;
-	import nochump.util.zip.ZipOutput;
-	
 	import weave.utils.OrderedHashMap;
 	import weave.zip.*;
 
@@ -64,39 +60,20 @@ package weave.api
 		 */		
 		private function _readArchive(fileData:ByteArray):void
 		{
-			var t:int = getTimer();
-			var pzip:uint = weave.zip.openZip(fileData);
-			if (pzip)
+			var zip:Object = readZip(fileData, filterFilePathsToReadAsObject);
+			for (var path:String in zip)
 			{
-				for each (var fileName:String in weave.zip.listFiles(pzip))
-					trace(fileName, weave.zip.readFile(pzip, fileName).length);
-				trace('close', weave.zip.closeZip(pzip));
-				trace('done', getTimer() - t);
-				fileData.position = 0;
+				var fileName:String = path.substr(path.indexOf('/') + 1);
+				if (filterFilePathsToReadAsObject(path))
+					objects[fileName] = zip[path];
+				else
+					files[fileName] = zip[path];
 			}
-			t = getTimer();
-			var zip:ZipFile = new ZipFile(fileData);
-			for (var i:int = 0; i < zip.entries.length; i++)
-			{
-				var entry:ZipEntry = zip.entries[i];
-				var path:Array = entry.name.split('/');
-				if (path[0] == FOLDER_FILES)
-					files[path[1]] = zip.getInput(entry);
-				if (path[0] == FOLDER_AMF)
-					objects[path[1]] = zip.getInput(entry).readObject();
-			}
-			trace('done2', getTimer() - t);
 		}
 		
-		/**
-		 * @private
-		 */		
-		private function _addZipEntry(zipOut:ZipOutput, fileName:String, fileData:ByteArray):void
+		private function filterFilePathsToReadAsObject(filePath:String):Boolean
 		{
-			var ze:ZipEntry = new ZipEntry(fileName);
-			zipOut.putNextEntry(ze);
-			zipOut.write(fileData);
-			zipOut.closeEntry();
+			return filePath.indexOf(FOLDER_AMF + '/') == 0;
 		}
 		
 		/**
@@ -106,23 +83,13 @@ package weave.api
 		 */
 		public function serialize():ByteArray
 		{
-			var i:int;
 			var name:String;
-			var zipOut:ZipOutput = new ZipOutput();
+			var zip:Object = {};
 			for (name in files)
-			{
-				_addZipEntry(zipOut, FOLDER_FILES + '/' + name, files[name]);
-			}
+				zip[FOLDER_FILES + '/' + name] = files[name];
 			for (name in objects)
-			{
-				var amf:ByteArray = new ByteArray();
-				amf.writeObject(objects[name]);
-				_addZipEntry(zipOut, FOLDER_AMF + '/' + name, amf);
-			}
-			zipOut.comment = getQualifiedClassName(this);
-			zipOut.finish();
-			
-			return zipOut.byteArray;
+				zip[FOLDER_AMF + '/' + name] = objects[name];
+			return writeZip(zip);
 		}
 	}
 }

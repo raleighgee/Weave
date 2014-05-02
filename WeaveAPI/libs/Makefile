@@ -1,13 +1,40 @@
-# to compile:  make FLASCC=/cygdrive/c/flascc/sdk FLEX=/cygdrive/c/flex
+FLASCC:=/cygdrive/c/flascc/sdk
+FLEX:=/cygdrive/c/flex
+AS3COMPILER:=asc2.jar
+BASE_CFLAGS:=-Werror -Wno-write-strings -Wno-trigraphs
 
-all: zip.swc
+$?UNAME=$(shell uname -s)
+ifneq (,$(findstring CYGWIN,$(UNAME)))
+	$?nativepath=$(shell cygpath -at mixed $(1))
+	$?unixpath=$(shell cygpath -at unix $(1))
+else
+	$?nativepath=$(abspath $(1))
+	$?unixpath=$(abspath $(1))
+endif
 
+ifneq (,$(findstring "asc2.jar","$(AS3COMPILER)"))
+	$?AS3COMPILERARGS=java $(JVMARGS) -jar $(call nativepath,$(FLASCC)/usr/lib/$(AS3COMPILER)) -merge -md 
+else
+	echo "ASC is no longer supported" ; exit 1 ;
+endif
+
+all: check zip.swc
+
+check:
+	@if [ -d $(FLASCC)/usr/bin ] ; then true ; \
+	else echo "Couldn't locate FLASCC sdk directory, please invoke make with \"make FLASCC=/path/to/FLASCC/sdk ...\"" ; exit 1 ; \
+	fi
+
+	@if [ -d "$(FLEX)/bin" ] ; then true ; \
+	else echo "Couldn't locate Flex sdk directory, please invoke make with \"make FLEX=/path/to/flex  ...\"" ; exit 1 ; \
+	fi
+	
 .SECONDEXPANSION:
 %.swc: $$(wildcard %/*)
-	echo "$(FLASCC)/usr/bin/g++" $(BASE_CFLAGS) -O4 $*/*.cpp -emit-swc=weave.$* -o $@
+	"$(FLASCC)/usr/bin/g++" $(BASE_CFLAGS) -flto-api=$*/exports.txt -O4 $*/*.cpp -emit-swc=weave.$* -o $@
 
 clean:
-	rm -f *.swf *.swc *.bc *.exe
+	rm -f *.swc
 
 # http://www.cprogramming.com/tutorial/makefiles_continued.html
 # http://stackoverflow.com/questions/6637088/makefile-pattern-rule-referencing-stem-in-dependencies
