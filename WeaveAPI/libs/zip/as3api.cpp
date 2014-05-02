@@ -17,7 +17,7 @@
 // sample miniz code found here: https://github.com/drhelius/Gearboy/blob/master/src/Cartridge.cpp#L146
 
 #define tracef(...) {\
-	unsigned int __size = 256;\
+	size_t __size = 256;\
 	char __cstr[__size];\
 	AS3_DeclareVar(__astr, String);\
 	AS3_CopyCStringToVar(__astr, __cstr, snprintf(__cstr, __size, __VA_ARGS__));\
@@ -34,7 +34,7 @@ void openZip() __attribute__((used,
 void openZip()
 {
 	char *byteArray_c;
-	unsigned int byteArray_len;
+	size_t byteArray_len;
 
 	inline_as3("byteArray.position = 0;");
 	inline_as3("%0 = byteArray.length;" : "=r"(byteArray_len));
@@ -137,67 +137,4 @@ void closeZip()
 
 	free(zip_archive->m_pState->m_pMem);
 	AS3_Return(mz_zip_reader_end(zip_archive));
-}
-
-
-void testZip() __attribute__((used,
-	annotate("as3sig:public function testZip(byteArray:ByteArray):Boolean"),
-	annotate("as3package:weave.zip"),
-	annotate("as3import:flash.utils.ByteArray")));
-void testZip()
-{
-	char *byteArray_c;
-	unsigned int byteArray_len;
-
-	inline_as3("%0 = byteArray.length;" : "=r"(byteArray_len));
-	byteArray_c = (char *)malloc(byteArray_len);
-
-	inline_as3("CModule.ram.position = %0;" : : "r"(byteArray_c));
-	inline_as3("CModule.ram.writeBytes(byteArray);");
-
-	//using namespace std;
-
-	mz_zip_archive zip_archive;
-	mz_bool status;
-	memset(&zip_archive, 0, sizeof (zip_archive));
-
-	status = mz_zip_reader_init_mem(&zip_archive, (void*) byteArray_c, byteArray_len, 0);
-	if (!status)
-	{
-		tracef("mz_zip_reader_init_mem() failed!");
-		AS3_Return(false);
-	}
-
-	for (unsigned int i = 0; i < mz_zip_reader_get_num_files(&zip_archive); i++)
-	{
-		mz_zip_archive_file_stat file_stat;
-		if (!mz_zip_reader_file_stat(&zip_archive, i, &file_stat))
-		{
-			tracef("mz_zip_reader_file_stat() failed!");
-			mz_zip_reader_end(&zip_archive);
-			AS3_Return(false);
-		}
-
-		tracef("ZIP Content - Filename: \"%s\", Comment: \"%s\", Uncompressed size: %u, Compressed size: %u", file_stat.m_filename, file_stat.m_comment, (unsigned int) file_stat.m_uncomp_size, (unsigned int) file_stat.m_comp_size);
-
-		const char* fn = file_stat.m_filename;
-
-		void* uncomp_file;
-		size_t uncomp_size;
-
-		uncomp_file = mz_zip_reader_extract_file_to_heap(&zip_archive, file_stat.m_filename, &uncomp_size, 0);
-		if (!uncomp_file)
-		{
-			tracef("mz_zip_reader_extract_file_to_heap() failed!");
-			mz_zip_reader_end(&zip_archive);
-			AS3_Return(false);
-		}
-
-		free(uncomp_file);
-	}
-
-	mz_zip_reader_end(&zip_archive);
-	tracef("success");
-
-	AS3_Return(true);
 }

@@ -1,2 +1,0 @@
-cd "c:/Weave/WeaveAPI/libs/"
-make FLASCC=/cygdrive/c/flascc/sdk FLEX=/cygdrive/c/flex
