@@ -16,13 +16,8 @@
 package weave.api
 {
 	import flash.utils.ByteArray;
-	import flash.utils.getQualifiedClassName;
-	import flash.utils.getTimer;
-	
-	import mx.utils.ObjectUtil;
 	
 	import weave.utils.OrderedHashMap;
-	import weave.zip.*;
 
 	/**
 	 * This is an interface for reading and writing data in the Weave file format.
@@ -60,7 +55,7 @@ package weave.api
 		 */		
 		private function _readArchive(fileData:ByteArray):void
 		{
-			var zip:Object = readZip(fileData, filterFilePathsToReadAsObject);
+			var zip:Object = weave.utils.readZip(fileData, filterFilePathsToReadAsObject);
 			for (var path:String in zip)
 			{
 				var fileName:String = path.substr(path.indexOf('/') + 1);
@@ -89,7 +84,7 @@ package weave.api
 				zip[FOLDER_FILES + '/' + name] = files[name];
 			for (name in objects)
 				zip[FOLDER_AMF + '/' + name] = objects[name];
-			return writeZip(zip);
+			return weave.utils.writeZip(zip);
 		}
 	}
 }

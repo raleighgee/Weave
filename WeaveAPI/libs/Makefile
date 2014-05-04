@@ -18,7 +18,7 @@ else
 	echo "ASC is no longer supported" ; exit 1 ;
 endif
 
-all: check zip.swc
+all: check weave_flascc.swc
 
 check:
 	@if [ -d $(FLASCC)/usr/bin ] ; then true ; \
@@ -28,10 +28,13 @@ check:
 	@if [ -d "$(FLEX)/bin" ] ; then true ; \
 	else echo "Couldn't locate Flex sdk directory, please invoke make with \"make FLEX=/path/to/flex  ...\"" ; exit 1 ; \
 	fi
+
+weave_flascc.swc: $(wildcard weave_flascc/*)
+	"$(FLASCC)/usr/bin/g++" $(BASE_CFLAGS) -flto-api=weave_flascc/exports.txt -O4 weave_flascc/*.cpp -emit-swc=weave.flascc -o $@
 	
-.SECONDEXPANSION:
-%.swc: $$(wildcard %/*)
-	"$(FLASCC)/usr/bin/g++" $(BASE_CFLAGS) -flto-api=$*/exports.txt -O4 $*/*.cpp -emit-swc=weave.$* -o $@
+#.SECONDEXPANSION:
+#%.swc: $$(wildcard %/*)
+#	"$(FLASCC)/usr/bin/g++" $(BASE_CFLAGS) -flto-api=$*/exports.txt -O4 $*/*.cpp -emit-swc=weave.$* -o $@
 
 clean:
 	rm -f *.swc

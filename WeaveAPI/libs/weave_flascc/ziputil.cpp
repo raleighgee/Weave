@@ -28,11 +28,14 @@
 }
 
 /**
- * Returns an object mapping file paths to ByteArrays.
+ * Extracts files from an archive.
+ * @param archive The bytes of a ZIP archive.
+ * @param filterFilePathsToReadAsObject A function like function(path:String):Boolean which returns true if the file should be read as an AMF object.
+ * @return An object mapping each file path contained in the archive to a ByteArray (or a decoded AMF object).
  */
 void readZip() __attribute__((used,
 	annotate("as3sig:public function readZip(byteArray:ByteArray, filterFilePathsToReadAsObject:Function = null):Object"),
-	annotate("as3package:weave.zip"),
+	annotate("as3package:weave.utils"),
 	annotate("as3import:flash.utils.ByteArray")));
 void readZip()
 {
@@ -55,7 +58,7 @@ void readZip()
  */
 void openZip() __attribute__((used,
 	annotate("as3sig:internal function openZip(byteArray:ByteArray):uint"),
-	annotate("as3package:weave.zip"),
+	annotate("as3package:weave.utils"),
 	annotate("as3import:flash.utils.ByteArray")));
 void openZip()
 {
@@ -65,8 +68,11 @@ void openZip()
 	inline_nonreentrant_as3("%0 = byteArray.length;" : "=r"(byteArray_len));
 	byteArray_ptr = malloc(byteArray_len);
 
-	inline_as3("CModule.ram.position = %0;" : : "r"(byteArray_ptr));
-	inline_as3("CModule.ram.writeBytes(byteArray);");
+	inline_as3(
+		"ram_init.position = %0;"
+		"ram_init.writeBytes(byteArray);"
+			: : "r"(byteArray_ptr)
+	);
 
 	mz_zip_archive *zip_archive = (mz_zip_archive*)malloc(sizeof(zip_archive));
 	memset(zip_archive, 0, sizeof(mz_zip_archive));
@@ -88,7 +94,7 @@ void openZip()
  */
 void listFiles() __attribute__((used,
 	annotate("as3sig:internal function listFiles(_zip_archive:uint):Array"),
-	annotate("as3package:weave.zip")));
+	annotate("as3package:weave.utils")));
 void listFiles()
 {
 	mz_zip_archive *zip_archive;
@@ -109,7 +115,7 @@ void listFiles()
 
 void readFile() __attribute__((used,
 	annotate("as3sig:internal function readFile(_zip_archive:uint, _fileName:String):ByteArray"),
-	annotate("as3package:weave.zip"),
+	annotate("as3package:weave.utils"),
 	annotate("as3import:flash.utils.ByteArray")));
 void readFile()
 {
@@ -122,9 +128,12 @@ void readFile()
 	size_t uncomp_size;
 
 	uncomp_file = mz_zip_reader_extract_file_to_heap(zip_archive, fileName, &uncomp_size, MZ_ZIP_FLAG_CASE_SENSITIVE);
-	inline_nonreentrant_as3("var byteArray:ByteArray = new ByteArray();");
-	inline_as3("CModule.ram.position = %0;" : : "r"(uncomp_file));
-	inline_as3("CModule.ram.readBytes(byteArray, 0, %0);" : : "r"(uncomp_size));
+	inline_as3(
+		"var byteArray:ByteArray = new ByteArray();"
+		"ram_init.position = %0;"
+		"ram_init.readBytes(byteArray, 0, %1);"
+			 : : "r"(uncomp_file), "r"(uncomp_size)
+	);
 	free(uncomp_file);
 	free(fileName);
 	AS3_ReturnAS3Var(byteArray);
@@ -132,7 +141,7 @@ void readFile()
 
 void readObject() __attribute__((used,
 		annotate("as3sig:internal function readObject(_zip_archive:uint, _fileName:String):Object"),
-		annotate("as3package:weave.zip")));
+		annotate("as3package:weave.utils")));
 void readObject()
 {
 	mz_zip_archive *zip_archive;
@@ -145,8 +154,13 @@ void readObject()
 
 	uncomp_file = mz_zip_reader_extract_file_to_heap(zip_archive, fileName, &uncomp_size, MZ_ZIP_FLAG_CASE_SENSITIVE);
 	AS3_DeclareVar(result, Object);
-	inline_as3("CModule.ram.position = %0;" : : "r"(uncomp_file));
-	inline_as3("try { result = CModule.ram.readObject(); } catch (e:Error) { }");
+	inline_as3(
+		"try {"
+		"    ram_init.position = %0;"
+		"    result = ram_init.readObject();"
+		"} catch (e:Error) { }"
+			: : "r"(uncomp_file)
+	);
 	free(uncomp_file);
 	free(fileName);
 	AS3_ReturnAS3Var(result);
@@ -154,7 +168,7 @@ void readObject()
 
 void closeZip() __attribute__((used,
 	annotate("as3sig:internal function closeZip(_zip_archive:uint):Boolean"),
-	annotate("as3package:weave.zip")));
+	annotate("as3package:weave.utils")));
 void closeZip()
 {
 	mz_zip_archive *zip_archive;
@@ -166,9 +180,14 @@ void closeZip()
 	AS3_Return(status);
 }
 
+/**
+ * Creates a ZIP archive.
+ * @param files An object mapping each file path contained in the archive to a ByteArray (or an Object to be encoded as AMF).
+ * @return The bytes of a ZIP archive.
+ */
 void writeZip() __attribute__((used,
 		annotate("as3sig:public function writeZip(files:Object):ByteArray"),
-		annotate("as3package:weave.zip"),
+		annotate("as3package:weave.utils"),
 		annotate("as3import:flash.utils.ByteArray")));
 void writeZip()
 {
@@ -207,15 +226,18 @@ void writeZip()
 			tracef("mz_zip_writer_end() failed! zip=%u", &zip_archive);
 		AS3_ReturnAS3Var(byteArray);
 	}
-	inline_nonreentrant_as3("byteArray = new ByteArray();");
-	inline_as3("CModule.ram.position = %0" : : "r"(byteArray_ptr));
-	inline_as3("CModule.ram.readBytes(byteArray, 0, %0)" : : "r"(byteArray_len));
+	inline_as3(
+		"byteArray = new ByteArray();"
+		"ram_init.position = %0;"
+		"ram_init.readBytes(byteArray, 0, %1);"
+			: : "r"(byteArray_ptr), "r"(byteArray_len)
+	);
 	AS3_ReturnAS3Var(byteArray);
 }
 
 void writeFile() __attribute__((used,
 		annotate("as3sig:internal function writeFile(_zip_archive:uint, _fileName:String, _fileContent:Object):Boolean"),
-		annotate("as3package:weave.zip"),
+		annotate("as3package:weave.utils"),
 		annotate("as3import:flash.utils.ByteArray")));
 void writeFile()
 {
@@ -224,7 +246,7 @@ void writeFile()
 
 	// copy _fileContent from AS3 to C
 	size_t contentLength;
-	inline_as3(
+	inline_nonreentrant_as3(
 		"var byteArray:ByteArray = _fileContent as ByteArray;"
 		"if (!byteArray)"
 		"{"
@@ -234,8 +256,11 @@ void writeFile()
 		"%0 = byteArray.length;" : "=r"(contentLength)
 	);
 	void *fileContent = malloc(contentLength);
-	inline_as3("CModule.ram.position = %0" : : "r"(fileContent));
-	inline_as3("CModule.ram.writeBytes(byteArray);");
+	inline_as3(
+		"ram_init.position = %0;"
+		"ram_init.writeBytes(byteArray);"
+			: : "r"(fileContent)
+	);
 
 	// write the file
 	char *fileName;

@@ -139,7 +139,6 @@ import weave.api.WeaveAPI;
 import weave.api.core.IDisposableObject;
 import weave.core.ClassUtils;
 import weave.utils.AsyncSort;
-import weave.zip.readZip;
 
 /**
  * @private
@@ -222,7 +221,7 @@ internal class Library implements IDisposableObject
 		try
 		{
 			// Extract the files from the SWC archive
-			var swc:Object = readZip(event.result as ByteArray);
+			var swc:Object = weave.utils.readZip(event.result as ByteArray);
 			if (!swc)
 				throw new Error("Unable to read SWC archive");
 			_library_swf = swc["library.swf"];
