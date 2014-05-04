@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include "AS3/AS3.h"
 
+// https://github.com/adobe-flash/crossbridge/blob/master/posix/
+
 // https://obtw.wordpress.com/2013/04/03/making-bytearray-faster/
 
 // http://bruce-lab.blogspot.com/2012/12/migrating-from-alchemy-to-flascc.html
@@ -60,7 +62,6 @@ void openZip()
 	void *byteArray_ptr;
 	size_t byteArray_len;
 
-	inline_nonreentrant_as3("byteArray.position = 0;");
 	inline_nonreentrant_as3("%0 = byteArray.length;" : "=r"(byteArray_len));
 	byteArray_ptr = malloc(byteArray_len);
 
