@@ -450,7 +450,7 @@ package weave.visualization.plotters
 			}
 			coordinate.x = (numeratorX/denominator);
 			coordinate.y = (numeratorY/denominator);
-			//trace(recordKey.localName,coordinate);
+			trace(recordKey.localName, coordinate.x, coordinate.y);
 			if( enableJitter.value )
 				jitterRecords(recordKey);
 			
@@ -1208,7 +1208,9 @@ package weave.visualization.plotters
 		
 		public function reverseEngineer(key:IQualifiedKey, target:Point):void
 		{
-			trace(target.x, target.y);
+			target.x = 0.05920679886685565;
+			target.y = 0.059206798866855426;			
+			trace("Target: ", target.x, target.y);
 			if(!key)
 			{
 				return;
@@ -1259,6 +1261,7 @@ package weave.visualization.plotters
 				target_current = target_next;
 				
 				current_link = linkLengths.pop();
+				mov_cols.pop();
 				//fixed_cols.pop();
 				
 				ann_center = getAnnulusCenter(key, fixed_cols, mov_cols, columns);
@@ -1333,19 +1336,20 @@ package weave.visualization.plotters
 				} 
 			}
 			
+			if(outer_intersection.length == 1 && inner_intersection.length == 2) 
+			{
+					return inner_intersection;
+			}
+			
+			if(outer_intersection.length == 2 && inner_intersection.length == 1) 
+			{
+				return outer_intersection;
+			}
+			
 			// handle the case where the inner circle of the annulus null
 			if(outer_intersection.length == 1 && !inner_intersection.length)
 			{
 				if(outer_intersection[0].x == -1 && outer_intersection[0].y == -1)
-				{
-					return [new Point(-1, -1)];
-				}
-			}
-			
-			// handle the case where the inner circle of the annulus null
-			if(!outer_intersection.length && inner_intersection.length == 1)
-			{
-				if(inner_intersection[0].x == -1 && inner_intersection[0].y == -1)
 				{
 					return [new Point(-1, -1)];
 				}
@@ -1379,62 +1383,38 @@ package weave.visualization.plotters
 				return [];
 			}
 			
-			// dx and dy are the vertical and horizontal distances between the circle centers.
-			var dx:Number = center1.x - center2.x;
-			var dy:Number = center1.y - center2.y;
+			var r0:Number = radius1;
+			var r1:Number = radius2;
 			
-			// Determine the straight-line distance between the centers.
+			var p0x:Number = center1.x;
+			var p0y:Number = center1.y;
+			var p1x:Number = center2.x;
+			var p1y:Number = center2.y;
+			
+			
+			var dx:Number = p0x - p1x;
+			var dy:Number = p0y - p1y;
 			var d:Number = Math.sqrt(dx*dx + dy*dy);
-			trace(d - (radius1 + radius2));
-			if(d - (radius1 + radius2) > EPSILON && Math.abs(d - (radius1 + radius2)) > EPSILON) {
-				// no solutions. circles do not intersect.
+			
+			if ((d > r0 + r1) ||
+				(d < Math.abs(r0 - r1))) 
+			{
 				return [];
 			}
 			
-			trace((d - Math.abs(radius1 - radius2)), Math.abs(d - Math.abs(radius1 - radius2)));
-			if(d - Math.abs(radius1 - radius2) < EPSILON && Math.abs(d - Math.abs(radius1 - radius2)) > EPSILON) {
-				// no solutions. one circle is contained in the other, however can lead to infinite
-				// intersection with annulus
-				return [new Point(-1, -1)];
-			}
+			var a:Number = ( r0*r0 - r1*r1 + d*d ) / (2*d);
 			
-			// a is the point where the line through the circle
-			// intersection points crosses the line between the circle
-			// centers.  
+			var h:Number = Math.sqrt(r0*r0 - a*a);
 			
-			//Determine the distance from point 0 to a.
-			var a:Number = ((radius1 * radius1) - (radius2 * radius2) + (d * d)) / (2 * d);
+			var p2x:Number = p0x + a * ( p1x - p0x ) / d;
+			var p2y:Number = p0y + a * ( p1y - p0y ) / d;
+			var d1x:Number = p2x + h * ( p1y - p0y ) / d;
+			var d1y:Number = p2y - h * ( p1x - p0x ) / d;
+			var d2x:Number = p2x - h * ( p1y - p0y ) / d;
+			var d2y:Number = p2y + h * ( p1x - p0x ) / d;
 			
-			// Determine the coordinates of a. 
-			var x2:Number = center1.x + (dx * a/d);
-			var y2:Number = center1.y + (dy * a/d);
 			
-			// Determine the distance from a to either of the
-			// intersection points.
-			
-			var h:Number = 0;
-			var h_temp:Number = radius1*radius1 - a * a;
-			if(h_temp < EPSILON)
-			{
-				h = 0;
-			}
-			else 
-			{
-				h = Math.sqrt(h_temp);	
-			}
-			
-			// Now determine the offsets of the intersection points from a.
-			var rx:Number = -dy * h/d;
-			var ry:Number = dx * h/d;
-			
-			// Determine the absolute intersection points.
-			
-			var xi:Number = x2 + rx;
-			var xi_prime:Number = x2 - rx;
-			var yi:Number = y2 + ry;
-			var yi_prime:Number = y2 - ry;
-			
-			return [new Point(xi, yi), new Point(xi_prime, yi_prime)];
+			return [new Point(d1x, d1y), new Point(d2x, d2y)];
 		}
 		
 		// Returns the signed angle between consecutive links.
