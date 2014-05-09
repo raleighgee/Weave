@@ -27,7 +27,7 @@ angular.module('aws.configure.metadata', []).controller("MetadataManagerCtrl", f
 		$scope.authenticated = false;
 	};
     
-	var generateTree = function() {
+	$scope.generateTree = function(element) {
 		queryService.getDataTableList().then(function(dataTableList) {
 			for (var i = 0; i < dataTableList.length; i++) {
 				dataTable = dataTableList[i];
@@ -45,7 +45,7 @@ angular.module('aws.configure.metadata', []).controller("MetadataManagerCtrl", f
 						treeNode.children = children;
 						treeData.push(treeNode);
 						if( treeData.length == end) {
-							$("#tree").dynatree({
+							$(element).dynatree({
 								minExpandLevel: 1,
 								children : treeData,
 								keyBoard : true,
@@ -58,7 +58,7 @@ angular.module('aws.configure.metadata', []).controller("MetadataManagerCtrl", f
 								},
 								debugLevel: 0
 							});
-							var node = $("#tree").dynatree("getRoot");
+							var node = $(element).dynatree("getRoot");
 						    // node.sortChildren(cmp, true);
 						}
 					});
@@ -66,8 +66,6 @@ angular.module('aws.configure.metadata', []).controller("MetadataManagerCtrl", f
 			}
 		});
 	};
-	
-	generateTree();
 	
 	var cmp = function(a, b) {
 		key1 = a.data.key;
@@ -166,7 +164,7 @@ angular.module('aws.configure.metadata', []).controller("MetadataManagerCtrl", f
 		 });
 	 };
 	 
-	$scope.refresh = function() {
+	$scope.refresh = function(element) {
 		$("#tree").dynatree("getTree").reload();
 		var node = $("#tree").dynatree("getRoot");
 	    node.sortChildren(cmp, true);
@@ -221,4 +219,14 @@ angular.module('aws.configure.metadata', []).controller("MetadataManagerCtrl", f
 	$scope.importQueryObject = function() {
 	
 	};
+});
+
+
+
+angular.module('aws.configure.metadata').directive('dynatree', function() {
+	return {
+        link: function(scope, element, attrs) {
+        	scope.generateTree(element);
+        }
+   };	
 });
