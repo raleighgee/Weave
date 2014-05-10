@@ -72,6 +72,7 @@ package weave.visualization.plotters
 	import weave.utils.EquationColumnLib;
 	import weave.utils.HierarchyUtils;
 	import weave.utils.RadVizUtils;
+	import weave.utils.fixErrorMessage;
 	import weave.visualization.plotters.styles.SolidFillStyle;
 	import weave.visualization.plotters.styles.SolidLineStyle;
 	
@@ -178,7 +179,8 @@ package weave.visualization.plotters
 				
 				for each(var key:IQualifiedKey in keys)
 				{
-					outerRadii.push(getOuterRadius(key, pointSensitivityColumns, annCenterColumns, columns));
+					var linkLengths:Array = getLinkLengths(key, cols, columns);
+					outerRadii.push(getOuterRadius(linkLengths));
 				}
 				
 				if(keys.length){
@@ -226,7 +228,7 @@ package weave.visualization.plotters
 		private var keyGlobalNormMap:Dictionary;
 		private var columnTitleMap:Dictionary;
 		
-		private static const EPSILON:Number = 0.0000001;
+		private static const EPSILON:Number = 0.0001;
 		private const _currentScreenBounds:Bounds2D = new Bounds2D();
 		
 		public var doCDLayoutFlag:Boolean = false; // ToDo yenfu temporary flag to fix the code
@@ -450,7 +452,6 @@ package weave.visualization.plotters
 			}
 			coordinate.x = (numeratorX/denominator);
 			coordinate.y = (numeratorY/denominator);
-			trace(recordKey.localName, coordinate.x, coordinate.y);
 			if( enableJitter.value )
 				jitterRecords(recordKey);
 			
@@ -782,24 +783,18 @@ package weave.visualization.plotters
 			var innerRadius:Number = 0;
 			var outerRadius:Number = 0;
 			var temp:Number = 0;
-			var eta:Number = 0;
-			var annCenterX:Number = 0;
-			var annCenterY:Number = 0;
 			var name:String;
 			var anchor:AnchorPoint;
 			var i:int = 0;
 			var colorIncrementor:Number = 0x00f0f0;
 			var color:Number = 0xff0000;
-			
+			var annCenter:Point;
 			for each( var key:IQualifiedKey in keys)
 			{
 				
 				linkLengths = [];
-				eta = 0;
 				innerRadius = 0;
 				outerRadius = 0;
-				annCenterX = 0;
-				annCenterY = 0;
 
 				/*if the keytype is different from the keytype of points visualized on Rad Vis then ignore*/
 				if(key.keyType != requiredKeyType)
@@ -808,71 +803,17 @@ package weave.visualization.plotters
 				}
 				getXYcoordinates(key);
 				dataBounds.projectPointTo(coordinate, screenBounds);
-				// compute the etta term for a record
-				for (i = 0; i < cols.length; i++)
-				{
-					var column:IAttributeColumn = cols[i];
-					var stats:IColumnStatistics = WeaveAPI.StatisticsCache.getColumnStatistics(column);
-					var value:Number = normArray ? normArray[i] : stats.getNorm(key);
-					if (isNaN(value))
-					{
-						value = 0;
-					}
-					eta += value;
-				}
 				
-				// compute the link lengths for a record
-				for (i = 0; i < psCols.length; i++)
-				{
-					column = psCols[i];
-					stats = WeaveAPI.StatisticsCache.getColumnStatistics(column);
-					value = normArray ? normArray[i] : stats.getNorm(key);
-					if(isNaN(value))
-					{
-						value = 0;	
-					}
-					linkLengths.push(value/eta);
-				}
+				linkLengths = getLinkLengths(key, psCols, columns);
+				
+				annCenter = getAnnulusCenter(key, annCols, columns);
 				
 				//trace(linkLengths);
 				// compute the annulus center for a record
-				for (i = 0; i < annCols.length; i++)
-				{
-					column = annCols[i];
-					stats = WeaveAPI.StatisticsCache.getColumnStatistics(column);
-					value = normArray ? normArray[i] : stats.getNorm(key);
-					if(isNaN(value))
-					{
-						value = 0
-					}
-					name = normArray ? columnTitleMap[column] : columns.getName(column);
-					anchor = anchors.getObject(name) as AnchorPoint;
-					annCenterX += (value * anchor.x.value)/eta;
-					annCenterY += (value * anchor.y.value)/eta;
-				}
+				outerRadius = getOuterRadius(linkLengths);
+				innerRadius = getInnerRadius(linkLengths);
 				
-				var maxLength:Number = Math.max.apply(null, linkLengths);
-
-				// the outer Radius is the sum of all the linkLengths
-				// the inner Radius is the difference between the longest arm
-				// and the remaining arms, and 0 if the difference is negative
-				for (i = 0; i < linkLengths.length; i++)
-				{
-					outerRadius += linkLengths[i];
-					if (linkLengths[i] != maxLength){
-						temp += linkLengths[i];
-					}
-				}
-			
-				innerRadius = maxLength - temp;
-				
-				if (innerRadius < 0) {
-					innerRadius = 0;
-				}
-				
-				var annCenter:Point = new Point(annCenterX, annCenterY);
 				dataBounds.projectPointTo(annCenter, screenBounds);
-				
 				// calculates the radViz radius in screenBounds
 				var center:Point = new Point(-1, -1);
 				dataBounds.projectPointTo(center, screenBounds);
@@ -900,25 +841,25 @@ package weave.visualization.plotters
 			}
 		}
 		
-		private function getInnerRadius(key:IQualifiedKey, fixedCols:Array, movingCols:Array, allColumns:LinkableHashMap):Number
+		private function getLinkLengths(key:IQualifiedKey, movingCols:Array, allColumns:LinkableHashMap):Array
 		{
-			
-			var normArray:Array = (localNormalization.value) ? keyNormMap[key] : keyGlobalNormMap[key];
 			var column:IAttributeColumn;
 			var stats:IColumnStatistics;
 			var value:Number;
+			
 			var psCols:Array = movingCols;
-			var cols:Array = columns.getObjects();
-			var annCols:Array = fixedCols;
+			
+			var cols:Array = allColumns.getObjects();
+			
 			var linkLengths:Array = [];
+			
 			var eta:Number = getEtaTerm(key, allColumns);
 			
-			// compute the link lengths for a record
 			for (var i:Number = 0; i < psCols.length; i++)
 			{
 				column = psCols[i];
 				stats = WeaveAPI.StatisticsCache.getColumnStatistics(column);
-				value = normArray ? normArray[i] : stats.getNorm(key);
+				value = stats.getNorm(key);
 				if(isNaN(value))
 				{
 					value = 0;	
@@ -926,24 +867,29 @@ package weave.visualization.plotters
 				linkLengths.push(value/eta);
 			}
 			
-			var maxLength:Number = Math.max.apply(null, linkLengths);
+			return linkLengths;
+		}
+		
+		private function getInnerRadius(linkLengths:Array):Number
+		{
 			
+			var maxLength:Number = Math.max.apply(null, linkLengths);
 			var innerRadius:Number = 0;
-			var outerRadius:Number = 0;
 			var temp:Number = 0;
 			
+			if(linkLengths.length == 1)
+			{
+				return 0;
+			}
 			// the outer Radius is the sum of all the linkLengths
 			// the inner Radius is the difference between the longest arm
 			// and the remaining arms, and 0 if the difference is negative
-			for (i = 0; i < linkLengths.length; i++)
+			for (var i:Number = 0; i < linkLengths.length; i++)
 			{
-				outerRadius += linkLengths[i];
-				if (linkLengths[i] != maxLength){
-					temp += linkLengths[i];
-				}
+				temp += linkLengths[i];
 			}
 			
-			innerRadius = maxLength - temp;
+			innerRadius = 2 * maxLength - temp;
 			
 			if (innerRadius < 0) {
 				innerRadius = 0;
@@ -952,42 +898,12 @@ package weave.visualization.plotters
 			return innerRadius;
 		}
 			
-		private function getOuterRadius(key:IQualifiedKey, fixedCols:Array, movingCols:Array, allColumns:LinkableHashMap):Number
+		private function getOuterRadius(linkLengths:Array):Number
 		{
-			var normArray:Array = (localNormalization.value) ? keyNormMap[key] : keyGlobalNormMap[key];
-			var column:IAttributeColumn;
-			var stats:IColumnStatistics;
-			var value:Number;
-			var psCols:Array = movingCols;
-			var cols:Array = allColumns.getObjects();
-			var annCols:Array = fixedCols;
-			var linkLengths:Array = [];
-			var eta:Number = getEtaTerm(key, allColumns);
-			
-			// compute the link lengths for a record
-			for (var i:Number = 0; i < psCols.length; i++)
-			{
-				column = psCols[i];
-				stats = WeaveAPI.StatisticsCache.getColumnStatistics(column);
-				value = normArray ? normArray[i] : stats.getNorm(key);
-				if(isNaN(value))
-				{
-					value = 0;	
-				}
-				linkLengths.push(value/eta);
-			}
-			
-			var maxLength:Number = Math.max.apply(null, linkLengths);
-			
 			var outerRadius:Number = 0;
 			
 			// the outer Radius is the sum of all the linkLengths
-			// the inner Radius is the difference between the longest arm
-			// and the remaining arms, and 0 if the difference is negative
-			for (i = 0; i < linkLengths.length; i++)
-			{
-				outerRadius += linkLengths[i];
-			}
+			for (var i:Number = 0; i < linkLengths.length; i++) outerRadius += linkLengths[i];
 			
 			return outerRadius;
 		}
@@ -995,26 +911,25 @@ package weave.visualization.plotters
 		private function getEtaTerm(key:IQualifiedKey, allColumns:LinkableHashMap):Number
 		{
 			var eta:Number = 0;
-			var normArray:Array = (localNormalization.value) ? keyNormMap[key] : keyGlobalNormMap[key];
 			var cols:Array = allColumns.getObjects();
 			
 			for (var i:Number = 0; i < cols.length; i++)
 			{
 				var column:IAttributeColumn = cols[i];
 				var stats:IColumnStatistics = WeaveAPI.StatisticsCache.getColumnStatistics(column);
-				var value:Number = normArray ? normArray[i] : stats.getNorm(key);
+				var value:Number = stats.getNorm(key);
 				if (isNaN(value))
 				{
 					value = 0;
 				}
 				eta += value;
 			}
+			
 			return eta;
 		}
 		
-		private function getAnnulusCenter(key:IQualifiedKey, fixedCols:Array, movingCols:Array, allColumns:LinkableHashMap):Point
+		private function getAnnulusCenter(key:IQualifiedKey, fixedCols:Array, allColumns:LinkableHashMap):Point
 		{
-			var normArray:Array = (localNormalization.value) ? keyNormMap[key] : keyGlobalNormMap[key];
 			var column:IAttributeColumn;
 			var stats:IColumnStatistics;
 			var value:Number = 0;
@@ -1022,28 +937,28 @@ package weave.visualization.plotters
 			var annCenterY:Number = 0;
 			var name:String;
 			var anchor:AnchorPoint;
-			var psCols:Array = movingCols;
 			var cols:Array = allColumns.getObjects();
 			var annCols:Array = fixedCols;
 			
 			var eta:Number = getEtaTerm(key, allColumns);
 			//trace(linkLengths);
 			// compute the annulus center for a record
+			
 			for (var i:Number = 0; i < annCols.length; i++)
 			{
 				column = annCols[i];
 				stats = WeaveAPI.StatisticsCache.getColumnStatistics(column);
-				value = normArray ? normArray[i] : stats.getNorm(key);
+				value = stats.getNorm(key);
 
 				if(isNaN(value))
 				{
 					value = 0
 				}
-				name = normArray ? columnTitleMap[column] : allColumns.getName(column);
+				
+				name = allColumns.getName(column);
 				anchor = anchors.getObject(name) as AnchorPoint;
 				annCenterX += (value * anchor.x.value)/eta;
 				annCenterY += (value * anchor.y.value)/eta;
-				trace(annCenterX, annCenterY);
 			}
 			return new Point(annCenterX, annCenterY);
 		}
@@ -1208,37 +1123,19 @@ package weave.visualization.plotters
 		
 		public function reverseEngineer(key:IQualifiedKey, target:Point):void
 		{
-			target.x = 0.05920679886685565;
-			target.y = 0.059206798866855426;			
-			trace("Target: ", target.x, target.y);
 			if(!key)
 			{
 				return;
 			}
 			var columns:LinkableHashMap = columns;
 			var eta:Number = getEtaTerm(key, columns);
-			var normArray:Array = (localNormalization.value) ? keyNormMap[key] : keyGlobalNormMap[key];
 			var column:IAttributeColumn;
 			var stats:IColumnStatistics;
-			var value:Number;
-			var linkLengths:Array = [];
 			var fixed_cols:Array = annCenterColumns.slice();
 			var mov_cols:Array = pointSensitivityColumns.slice();
+			var linkLengths:Array = getLinkLengths(key, mov_cols, columns);
 			var angles:Array = [];
 			var angle:Number;
-			// compute the link lengths for a record
-			for (var i:Number = 0; i < mov_cols.length; i++)
-			{
-				column = mov_cols[i];
-				stats = WeaveAPI.StatisticsCache.getColumnStatistics(column);
-				value = normArray ? normArray[i] : stats.getNorm(key);
-				if(isNaN(value))
-				{
-					value = 0;	
-				}
-				linkLengths.push(value/eta);
-			}
-			
 			var current_link:Number;
 			var ann_center:Point;
 			var ann_inner_radius:Number;
@@ -1248,25 +1145,20 @@ package weave.visualization.plotters
 			var current_circle_radius:Number;
 			
 			var r:Number;
-			var t:Point;
-			
 			var intersections:Array;
-			var target_next:Point = target;
-			var target_current:Point;
+			var target_current:Point = target;
 			
-			//fixed_cols = fixed_cols.concat(mov_cols);
+			anchors.delayCallbacks();
+			var anchor:AnchorPoint;
 			
+			ann_center = getAnnulusCenter(key, fixed_cols, columns);
 			while(linkLengths.length > 1)
 			{
-				target_current = target_next;
-				
 				current_link = linkLengths.pop();
-				mov_cols.pop();
-				//fixed_cols.pop();
+				column = mov_cols.pop();
 				
-				ann_center = getAnnulusCenter(key, fixed_cols, mov_cols, columns);
-				ann_inner_radius = getInnerRadius(key, fixed_cols, mov_cols, columns);
-				ann_outer_radius = getOuterRadius(key, fixed_cols, mov_cols, columns);
+				ann_inner_radius = getInnerRadius(linkLengths);
+				ann_outer_radius = getOuterRadius(linkLengths);
 				current_circle_center = target_current;
 				current_circle_radius = current_link;
 				
@@ -1277,45 +1169,42 @@ package weave.visualization.plotters
 					return;
 				}
 				
+				// infinite intersections
 				if(intersections.length == 1 && intersections[0].x == -1 && intersections[0].y == -1) {
-					// if that's the case, pick a random intersection
-					r = degreesToRadians(Math.random()*360);
-					t = new Point(Math.cos(r) * current_circle_radius + current_circle_center.x, Math.sin(r) * current_circle_radius + current_circle_center.y);
-					target_next = t;
-					angle = da_angle(current_circle_center, t);
-					angles.push(angle);
+					//pick a random intersection
+					r = Math.random()*2*Math.PI;
+					target_current = new Point(Math.cos(r) * current_circle_radius + current_circle_center.x, Math.sin(r) * current_circle_radius + current_circle_center.y);
+					angle = da_angle(current_circle_center, target_current);
+					anchor = anchors.getObject(columns.getName((column))) as AnchorPoint;
+					anchor.title.value = ColumnUtils.getTitle(column);
+					plot_anchor(anchor, angle);
 				} else {
-					target_next = select_intersection(intersections);
-					angle = da_angle(current_circle_center, target_next);
-					angles.push(angle);
+					target_current = select_intersection(intersections);
+					angle = da_angle(current_circle_center, target_current);
+					anchor = anchors.getObject(columns.getName((column))) as AnchorPoint;
+					anchor.title.value = ColumnUtils.getTitle(column);
+					plot_anchor(anchor, angle);
 				}
 			}
 			
 			if(linkLengths.length == 1)
 			{
-				mov_cols.pop();
-				ann_center = getAnnulusCenter(key, fixed_cols, mov_cols, columns);
-				angle = da_angle(ann_center, target_next);
-				angles.push(angle);
-			}
-			
-			var anchor:AnchorPoint;
-			anchors.delayCallbacks();
-			var _columns:Array = pointSensitivityColumns;
-			
-			for( i = angles.length - 1; i > -1; i--)
-			{
-				anchor = anchors.getObject(columns.getName(_columns[i])) as AnchorPoint ;								
-				anchor.x.value = Math.cos(angles[i]);
-				trace(anchor.x.value);
-				anchor.y.value = Math.sin(angles[i]);	
-				trace(anchor.y.value);
-				anchor.title.value = ColumnUtils.getTitle(_columns[i]);
+				column = mov_cols.pop();
+				ann_center = getAnnulusCenter(key, fixed_cols, columns);
+				angle = da_angle(target_current, ann_center);
+				anchor = anchors.getObject(columns.getName((column))) as AnchorPoint;
+				anchor.title.value = ColumnUtils.getTitle(column);
+				plot_anchor(anchor, angle);
 			}
 			
 			anchors.resumeCallbacks();
-			
-			// loop over the anchors and set the x and y position to the cosine and sines of the angles.
+		}
+		
+		private function plot_anchor(anchor:AnchorPoint, angle:Number):void
+		{
+			anchor.x.value = Math.cos(angle);
+			anchor.y.value = Math.sin(angle);	
+			return;
 		}
 		
 		private function annulus_circle_intersection(ann_center:Point, ann_inner_radius:Number, ann_outer_radius:Number, circle_center:Point, circle_radius:Number):Array
@@ -1346,7 +1235,7 @@ package weave.visualization.plotters
 				return outer_intersection;
 			}
 			
-			// handle the case where the inner circle of the annulus null
+			// handle the case where the inner circle of the annulus is null
 			if(outer_intersection.length == 1 && !inner_intersection.length)
 			{
 				if(outer_intersection[0].x == -1 && outer_intersection[0].y == -1)
@@ -1361,7 +1250,7 @@ package weave.visualization.plotters
 				return [];
 			}
 			
-			intersections = inner_intersection.concat(outer_intersection, inner_intersection);
+			intersections = inner_intersection.concat(outer_intersection);
 			
 			return intersections;
 		}
@@ -1394,17 +1283,34 @@ package weave.visualization.plotters
 			
 			var dx:Number = p0x - p1x;
 			var dy:Number = p0y - p1y;
-			var d:Number = Math.sqrt(dx*dx + dy*dy);
+			var d:Number = Point.distance(center1, center2);
 			
-			if ((d > r0 + r1) ||
-				(d < Math.abs(r0 - r1))) 
+			// circles do not intersect if the distance is greater than 
+			// the sum of both radii
+			if ( (d -  (r0 + r1)) > EPSILON && 
+				Math.abs(d - (r0 + r1)) > EPSILON )
 			{
-				return [];
+				return [];		
+			}
+				
+			// one circle is contained within the other
+			// here, it will mean the circle is contained
+			// in the annulus
+			if ((d - (r0 - r1)) < EPSILON && Math.abs(d - (r0 - r1)) > EPSILON) 
+			{
+				return [new Point(-1, -1)];
 			}
 			
 			var a:Number = ( r0*r0 - r1*r1 + d*d ) / (2*d);
 			
-			var h:Number = Math.sqrt(r0*r0 - a*a);
+			var h:Number =0;
+			var h_temp:Number = (r0*r0 - a*a);
+			if(h_temp < EPSILON)
+			{
+				h = 0;
+			} else {
+				h = Math.sqrt(h_temp);
+			}
 			
 			var p2x:Number = p0x + a * ( p1x - p0x ) / d;
 			var p2y:Number = p0y + a * ( p1y - p0y ) / d;
@@ -1417,21 +1323,14 @@ package weave.visualization.plotters
 			return [new Point(d1x, d1y), new Point(d2x, d2y)];
 		}
 		
-		// Returns the signed angle between consecutive links.
-		// The first angle is taken relative to the positive x axis.
+		// Returns the angle betweent the vector and the x-axis
 		private function da_angle(center:Point, target:Point):Number
 		{
-			var dy:Number = target.y - center.y;
-			var dx:Number = target.x - center.y;
 			
-			var angle:Number = Math.atan2(dy, dx);
+			var dy:Number = center.y - target.y;
+			var dx:Number = center.x - target.x;
 			
-			// clockwise angles are negative, but we want
-			// the counterclockwise angles
-			if(angle < 0)
-				angle = angle + 2 * Math.PI;
-			
-			return angle;
+			return Math.atan2(dy, dx);
 		}
 			
 		
