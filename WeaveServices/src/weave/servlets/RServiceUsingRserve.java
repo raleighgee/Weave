@@ -354,26 +354,25 @@ public class RServiceUsingRserve
 		return rexp;
 	}
 	
-	public static Object normalize(String docrootPath, Object[][] data) throws RemoteException
+	public static double[][] normalize(String docrootPath, Object[][] data) throws RemoteException
 	{
 		RConnection rConnection = null;
-		String[] inputNames = {"data"};
-		Object[] inputValues = {data};
-		Object result;
-		
+		double[][] result;
 		try
 		{
 			rConnection = getRConnection();
-			assignNamesToVector(rConnection, inputNames, inputValues);
+			rConnection.assign("data", getREXP(data));
 			
-			String script = "normalized <- as.data.frame(sapply(data, function(x) {(x - min(x, na.rm=TRUE))/(max(x, na.rm=TRUE)- min(x, na.rm=TRUE))}))";
+			String script = "normalized <- t(as.matrix(sapply(data, function(x) {(x - min(x, na.rm=TRUE))/(max(x, na.rm=TRUE)- min(x, na.rm=TRUE))})))";
 			
 			rConnection.eval(script);
 			
 			REXP evalValue = rConnection.eval("normalized");
-			result = rexp2javaObj(evalValue);
-		
+			
+			result = evalValue.asDoubleMatrix();
+			
 		}
+
 		catch (Exception e)
 		{
 			e.printStackTrace();

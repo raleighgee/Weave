@@ -40,7 +40,6 @@ package weave
 	import weave.api.core.ILinkableObject;
 	import weave.api.getCallbackCollection;
 	import weave.api.reportError;
-	import weave.api.ui.IVisTool;
 	import weave.compiler.StandardLib;
 	import weave.core.ClassUtils;
 	import weave.core.LibraryUtils;
@@ -236,7 +235,6 @@ package weave
 				// load missing plugins
 				var remaining:int = _pluginList.length;
 				var ILinkableObject_classQName:String = getQualifiedClassName(ILinkableObject);
-				var IVisTool_classQName:String = getQualifiedClassName(IVisTool);
 				
 				function handlePlugin(event:Event, plugin:String):void
 				{
@@ -400,7 +398,7 @@ package weave
 							loadWeaveFileContent(String(content));
 							return;
 						} catch (e:Error) { }
-						throw new Error("Invalid Weave session state.");
+						throw e;
 					}
 				}
 				
@@ -536,10 +534,7 @@ package weave
 			// get session history from shared object
 			var saved:Object = obj.data[uid];
 			if (debug)
-			{
-				weaveTrace("WeaveAPI.JS_var_weave = '" + WeaveAPI.JS_var_weave + "'");
-				debugTrace("handleWeaveReload", obj.data, uid, saved);
-			}
+				debugTrace("handleWeaveReload", JavaScript.objectID, obj.data, uid, saved);
 			if (saved)
 			{
 				// delete session history from shared object

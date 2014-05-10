@@ -87,13 +87,16 @@ package weave.services
 			if (method == URLRequestMethod.POST)
 			{
 				var bytes:ByteArray = urlRequest.data as ByteArray;
-				var string:String = urlRequest.data as String;
+				if (urlRequest.data is String)
+				{
+					bytes = new ByteArray();
+					bytes.writeUTFBytes(urlRequest.data as String);
+				}
 				
 				var encoder:Base64Encoder = new Base64Encoder();
+				encoder.insertNewLines = false;
 				if (bytes)
-					encoder.encodeBytes(urlRequest.data as ByteArray);
-				else if (string)
-					encoder.encode(string);
+					encoder.encodeBytes(bytes);
 				base64data = encoder.drain();
 			}
 			else
@@ -102,7 +105,7 @@ package weave.services
 					url += "?" + urlRequest.data;
 			}
 			
-			uniqueIDToTokenMap[id] = new QueryToken(url, dataFormat, token);
+			uniqueIDToTokenMap[id] = new QueryToken(urlRequest, dataFormat, token);
 			
 			WeaveAPI.executeJavaScript(
 				{"id": id, "method": method, "url": url, "requestHeaders": requestHeaders, "base64data": base64data},
@@ -147,7 +150,7 @@ package weave.services
 				else
 					faultCode = lang("Error");
 				
-				var fault:Fault = new Fault(faultCode, lang("HTTP GET failed"), qt.url);
+				var fault:Fault = new Fault(faultCode, lang("HTTP " + qt.urlRequest.method + " failed; Check that the server allows Cross-Origin Resource Sharing (CORS)"), qt.urlRequest.url);
 				fault.content = result;
 				qt.asyncToken.mx_internal::applyFault(FaultEvent.createEvent(fault, qt.asyncToken));
 			}
@@ -203,18 +206,20 @@ package weave.services
 	}
 }
 
+import flash.net.URLRequest;
+
 import mx.rpc.AsyncToken;
 
 internal class QueryToken
 {
-	public function QueryToken(url:String, dataFormat:String, asyncToken:AsyncToken)
+	public function QueryToken(urlRequest:URLRequest, dataFormat:String, asyncToken:AsyncToken)
 	{
-		this.url = url;
+		this.urlRequest = urlRequest;
 		this.dataFormat = dataFormat;
 		this.asyncToken = asyncToken;
 	}
 	
-	public var url:String;
+	public var urlRequest:URLRequest;
 	public var dataFormat:String;
 	public var asyncToken:AsyncToken;
 }

@@ -19,13 +19,14 @@
 package weave.visualization.tools
 {
 	import weave.api.WeaveAPI;
+	import weave.api.data.IAttributeColumn;
+	import weave.api.ui.IVisToolWithSelectableAttributes;
 	import weave.compiler.Compiler;
 	import weave.core.LinkableHashMap;
 	import weave.core.LinkableString;
-	import weave.utils.getExternalObjectID;
 	import weave.utils.EventUtils;
 
-	public class ExternalTool extends LinkableHashMap
+	public class ExternalTool extends LinkableHashMap implements IVisToolWithSelectableAttributes 
 	{
 		private var toolUrl:LinkableString;
 		private var toolPath:Array;
@@ -48,7 +49,7 @@ package weave.visualization.tools
 			if (toolPath == null || windowName == null)
 			{
 				toolPath = WeaveAPI.SessionManager.getPath(WeaveAPI.globalHashMap, this);
-				toolPath.unshift(weave.utils.getExternalObjectID());
+				toolPath.unshift(JavaScript.objectID);
 				windowName = Compiler.stringify(toolPath);
 			}
 			WeaveAPI.executeJavaScript(
@@ -69,6 +70,21 @@ package weave.visualization.tools
 				{windowName: windowName},
 				"if (weave.external_tools && weave.external_tools[windowName]) weave.external_tools[windowName].close();"
 			);
+		}
+		/**
+		 * @return An Array of names corresponding to the objects returned by getSelectableAttributes().
+		 */
+		public function getSelectableAttributeNames():Array
+		{
+			return getNames(IAttributeColumn);
+		}
+
+		/**
+		 * @return An Array of DynamicColumn and/or ILinkableHashMap objects that an AttributeSelectorPanel can link to.
+		 */
+		public function getSelectableAttributes():Array
+		{
+			return getObjects(IAttributeColumn);
 		}
 	}
 }
