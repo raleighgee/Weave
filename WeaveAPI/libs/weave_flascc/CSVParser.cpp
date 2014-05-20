@@ -258,12 +258,17 @@ vector< vector<string> > CSVParser::parseCSV(string csvInput, bool parseTokens)
 		vector <string> rowArray(columnCount);
 		// the row may not have all the columns
 		int vectorSize =  rowVector->size();
+		string* str;
 		for (j = 0; j <vectorSize; j++)
 		{
-			string* str =  rowVector->at(j);
+			str =  rowVector->at(j);
+			cout<< *str << endl;
 			rowArray[j] =  *str;
-			//rowVector[j] =  NULL; // free the memory
+			//remove the allocated memory
+			delete rowVector;
 		}
+		//remove the allocated memory
+		delete str;
 		// fill remaining columns with empty Strings
 		for (; j < columnCount; j++)
 			rowArray[j] = "";
