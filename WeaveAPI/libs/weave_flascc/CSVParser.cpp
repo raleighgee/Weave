@@ -264,10 +264,9 @@ vector< vector<string> > CSVParser::parseCSV(string csvInput, bool parseTokens)
 			str =  rowVector->at(j);
 			cout<< *str << endl;
 			rowArray[j] =  *str;
-			//remove the allocated memory
-			delete rowVector;
 		}
 		//remove the allocated memory
+		delete rowVector;
 		delete str;
 		// fill remaining columns with empty Strings
 		for (; j < columnCount; j++)
