@@ -1,7 +1,7 @@
 FLASCC:=/cygdrive/c/flascc/sdk
-FLEX:=/cygdrive/c/flex
+FLEX:=/cygdrive/c/Apache Flex SDK 4.12
 AS3COMPILER:=asc2.jar
-BASE_CFLAGS:=-Werror -Wno-write-strings -Wno-trigraphs
+BASE_CFLAGS:=-Werror -Wno-write-strings -Wno-trigraphs -jvmopt=-Xmx1G
 
 $?UNAME=$(shell uname -s)
 ifneq (,$(findstring CYGWIN,$(UNAME)))

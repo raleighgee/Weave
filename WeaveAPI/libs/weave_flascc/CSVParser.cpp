@@ -91,76 +91,92 @@ string* CSVParser::createCSVToken(string str, bool quoteEmptyStrings)
 	return token;
 }
 
-string*  CSVParser::newToken(vector< vector<string*>* > &rows, bool newRow)
+inline string*  CSVParser::newToken(vector< vector<string*>* > &rows, bool newRow)
 {
+	//tracef("%u , %u",rows ,newRow);
 	if (newRow){
 		vector<string* >* stringVector = new vector<string* >;
-		cout << "Created Vector address(new Token: " << stringVector << endl;
+		//cout << "Created Vector address(new Token: " << stringVector << endl;
 		rows.push_back(stringVector);
 	}
 	vector<string* >* lastElement = rows.back() ;
-	cout << "lastElement Address(new Token: " << rows.back() << endl;
+	//cout << "lastElement Address(new Token: " << rows.back() << endl;
 	string* token = new string;
-	cout << "inner" << endl;
-	cout << lastElement->size() << endl;
+	//cout << "inner" << endl;
+	//cout << lastElement->size() << endl;
 	lastElement->push_back(token);
-	cout << lastElement->size() << endl;
+	//cout << lastElement->size() << endl;
 
 	return token;
 }
 
-/**
- * This function parses a String as a CSV-encoded row.
- * @param csvData The CSV string to parse.
- * @param parseTokens If this is true, tokens surrounded in quotes will be unquoted and escaped characters will be unescaped.
- * @return The result of parsing the CSV string.
- */
-vector<string> CSVParser::parseCSVRow(string csvData, bool parseTokens)
-{
-	vector<string> empty(0);
-	//used empty Vector instead of NULL as NULL is integer value in C++
-	if (csvData == "")
-		return empty;
 
-	vector< vector<string> > rows = parseCSV(csvData, parseTokens);
-	if (rows.size() > 0)
-		return rows.at(0);
-
-
-	return empty;
-
-}
 
 void CSVParser::test(){
 
 }
 
-vector< vector<string> > CSVParser::parseCSV(string csvInput, bool parseTokens)
+void parseCSV2() __attribute__((used,
+		annotate("as3sig:public function parseCSV2(myString:String, _parseTokens:Boolean):Array"),
+		annotate("as3package:weave.utils"),
+		annotate("as3import:flash.utils.ByteArray")));
+
+void parseCSV2()
 {
-	stringstream csvReader(csvInput);
+
+	char *str = NULL;
+	AS3_MallocString(str, myString);
+	//tracef(" ParseCSV2 : %u %u",str, strlen(str));
+
+
+	bool parseTokens;
+	// for bool,int, numbers
+	AS3_GetScalarFromVar(parseTokens,_parseTokens);
+
+	CSVParser parser;
+	parser.parseCSV(str,parseTokens);
+	free(str);
+	// to make the Flash array and return it
+	//size_t
+	inline_as3(
+			"var resultArray:Array = new Array();"
+
+		);
+}
+
+inline void saveToken(char* start, char* end){
+	tracef("saveToken : %u %u", start, end - start);
+}
+
+void CSVParser::parseCSV(char* csvInput, bool parseTokens)
+{
+	//stringstream csvReader(csvInput);
 	vector< vector<string* >* > rows;
 
 	bool escaped = false;
 	bool skipNext = false;
-	int next = csvReader.get();
+	//int next = csvReader.get();
 
+	char* start = csvInput;
+	char* end = csvInput;
 
 	// special case -- if csv is empty, return an empty array (a set of zero rows)
-	if (next == -1){
-		vector< vector<string> > empty(0);
-		return empty;
+	if (!*csvInput){
+		//vector< vector<string> > empty(0);
+		//return empty;
 	}
 
 
-	string* token = newToken(rows, true); // new row
-//	char next = csvInput[0];
+	//string* token = newToken(rows, true); // new row
+	char next = csvInput[0];
 	//for (int charIndex = 0; charIndex < csvInput.length(); charIndex++){
-	while (next != -1)
+
+	while (*csvInput++)
 	{
 
 		char chr = (char) next;
 	  //  char chr =  next;
-		next = csvReader.get();
+		next = *csvInput;
 
 		if (skipNext)
 		{
@@ -173,12 +189,12 @@ vector< vector<string> > CSVParser::parseCSV(string csvInput, bool parseTokens)
 			if (chr == quote)
 			{
 				// append quote if not parsing tokens
-				if (!parseTokens)
-					*token += quote;
+				//if (!parseTokens)
+					//*token += quote;
 				if (next == quote) // escaped quote
 				{
 					// always append second quote
-					*token += quote;
+					//*token += quote;
 					// skip second quote mark
 					skipNext = true;
 				}
@@ -187,29 +203,31 @@ vector< vector<string> > CSVParser::parseCSV(string csvInput, bool parseTokens)
 					escaped = false;
 				}
 			}
-			else
-			{
-				*token += chr;
-			}
+			//else
+			//{
+				//*token += chr;
+			//}
 		}
 		else
 		{
 			if (chr == delimiter)
 			{
 				// start new token on same row
-				token = newToken(rows, false);
+				//tracef(token->c_str());
+				//token = newToken(rows, false);
 			}
-			else if (chr == quote && token->length() == 0)
+			else if (chr == quote && start == end)
 			{
 				// beginning of escaped token
 				escaped = true;
-				if (!parseTokens)
-					*token += chr;
+				//if (!parseTokens)
+					//*token += chr;
 			}
 			else if (chr == LF)
 			{
 				// start new token on new row
-				token = newToken(rows, true);
+				//tracef(token->c_str());
+				//token = newToken(rows, true);
 			}
 			else if (chr == CR)
 			{
@@ -217,16 +235,17 @@ vector< vector<string> > CSVParser::parseCSV(string csvInput, bool parseTokens)
 				if (next == LF)
 					skipNext = true; // skip line feed
 				// start new token on new row
-				token = newToken(rows, true);
+				//tracef(token->c_str());
+				//token = newToken(rows, true);
 			}
-			else //append single character to current token
-				*token += chr;
+			//else //append single character to current token
+				//*token += chr;
 		}
 	}
 
 	// if there is more than one row and last row is empty,
 	// remove last row assuming it is there because of a newline at the end of the file.
-	while (rows.size() > 1)
+	/*while (rows.size() > 1)
 	{
 		vector<string* >* lastRow = rows.back();
 		string*  lastElement = lastRow->back();
@@ -244,13 +263,13 @@ vector< vector<string> > CSVParser::parseCSV(string csvInput, bool parseTokens)
 	{
 		vector <string* >* row = rows.at(rowIndex);
 		int rowSize = row->size();
-		cout << "rowSize" << endl;
-		cout << row->size() << endl;
+		//cout << "rowSize" << endl;
+		//cout << row->size() << endl;
 		columnCount = max(columnCount, rowSize);
-	}
+	}*/
 
 	// create a 2D String array
-	vector <vector<string> > result(size);
+/*	vector <vector<string> > result(size);
 	for (int i = 0, j; i < size; i++)
 	{
 		vector<string* >* rowVector = rows.at(i);
@@ -262,7 +281,7 @@ vector< vector<string> > CSVParser::parseCSV(string csvInput, bool parseTokens)
 		for (j = 0; j <vectorSize; j++)
 		{
 			str =  rowVector->at(j);
-			cout<< *str << endl;
+			//cout<< *str << endl;
 			rowArray[j] =  *str;
 		}
 		//remove the allocated memory
@@ -274,7 +293,7 @@ vector< vector<string> > CSVParser::parseCSV(string csvInput, bool parseTokens)
 		result[i] = rowArray;
 	}
 
-	return result;
+	return result;*/
 }
 
 CSVParser::~CSVParser() {

@@ -11,20 +11,22 @@
 #include<string>
 #include<vector>
 #include<sstream>
+#include "AS3/AS3.h"
+#include "tracef.h"
 
 using namespace std;
 
 class CSVParser {
 	char quote;
 	char delimiter;
-	string* newToken(vector< vector<string*>* > &rows, bool newRow);
+	inline string* newToken(vector< vector<string*>* > &rows, bool newRow);
 	void test();
 public:
 
 	string parseCSVToken(string token);
 	string* createCSVToken(string,bool);
-	vector<string> parseCSVRow(string, bool);
-	vector< vector<string> > parseCSV(string, bool);
+	void parseCSV(char* , bool);
+
 
 	CSVParser();
 	~CSVParser();
