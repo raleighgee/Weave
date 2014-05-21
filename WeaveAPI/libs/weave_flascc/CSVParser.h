@@ -19,13 +19,17 @@ using namespace std;
 class CSVParser {
 	char quote;
 	char delimiter;
+	bool removeBlankLines;
 	inline string* newToken(vector< vector<string*>* > &rows, bool newRow);
 	void test();
+private:
+	inline void newRow();
+	inline void saveToken(char* start, char* end, bool parse);
 public:
 
 	string parseCSVToken(string token);
 	string* createCSVToken(string,bool);
-	void parseCSV(char* , bool);
+	inline void parseCSV(char* , bool);
 
 
 	CSVParser();

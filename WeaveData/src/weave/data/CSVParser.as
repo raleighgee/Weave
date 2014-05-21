@@ -28,6 +28,7 @@ package weave.data
 	import weave.api.core.ILinkableObject;
 	import weave.api.data.ICSVParser;
 	import weave.api.getCallbackCollection;
+	import weave.compiler.StandardLib;
 	import weave.utils.AsyncSort;
 
 	/**
@@ -94,13 +95,24 @@ package weave.data
 			this.col = 0;
 			this.escaped = false;
 			
-			if (asyncMode)
+			if (false)
 			{
 				WeaveAPI.StageUtils.startTask(this, parseIterate, WeaveAPI.TASK_PRIORITY_3_PARSING, parseDone);
 			}
 			else
 			{
+				var t0:int = getTimer();
+				
 				parseIterate(int.MAX_VALUE);
+				
+				var t1:int = getTimer();
+				
+				var out:Array = [];
+				weave.utils.parseCSV2(csvData, parseTokens, out);
+				
+				var t2:int = getTimer();
+				trace(t1-t0, t2-t1, csvData.length, StandardLib.arrayCompare(out, csvDataArray));
+				
 				parseDone();
 			}
 			

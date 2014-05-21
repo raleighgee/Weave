@@ -15,7 +15,7 @@ static char LF  = '\n';
 CSVParser::CSVParser() {
 	quote = '"';
 	delimiter = ',';
-
+	removeBlankLines = true;
 }
 /**
 	 * This function will decode a CSV token, removing quotes and un-escaping quotes where applicable.
@@ -117,183 +117,134 @@ void CSVParser::test(){
 }
 
 void parseCSV2() __attribute__((used,
-		annotate("as3sig:public function parseCSV2(myString:String, _parseTokens:Boolean):Array"),
+		annotate("as3sig:public function parseCSV2(myString:String, _parseTokens:Boolean, output:Array):Array"),
 		annotate("as3package:weave.utils"),
 		annotate("as3import:flash.utils.ByteArray")));
 
 void parseCSV2()
 {
-
 	char *str = NULL;
 	AS3_MallocString(str, myString);
 	//tracef(" ParseCSV2 : %u %u",str, strlen(str));
-
 
 	bool parseTokens;
 	// for bool,int, numbers
 	AS3_GetScalarFromVar(parseTokens,_parseTokens);
 
+	// initialize first row, empty
+	inline_as3(
+		"output.length = 0;"
+		"var outputRow:Array = [];"
+		"var outputCol:int = 0;"
+		"output[0] = outputRow;"
+	);
+
 	CSVParser parser;
 	parser.parseCSV(str,parseTokens);
 	free(str);
-	// to make the Flash array and return it
-	//size_t
-	inline_as3(
-			"var resultArray:Array = new Array();"
 
-		);
+	AS3_ReturnAS3Var(output);
 }
 
-inline void saveToken(char* start, char* end){
-	tracef("saveToken : %u %u", start, end - start);
-}
-
-void CSVParser::parseCSV(char* csvInput, bool parseTokens)
+// moves to the next row in the output
+inline void CSVParser::newRow()
 {
-	//stringstream csvReader(csvInput);
-	vector< vector<string* >* > rows;
+	// if skipping blank rows, don't create a new row if current row is blank
+	inline_nonreentrant_as3(
+		"if (!(%0 && outputCol == 1 && outputRow[0] == ''))"
+		"    output.push(outputRow = new Array(outputRow.length));"
+		"outputCol = 0;"
+		: : "r"(removeBlankLines)
+	);
+}
 
-	bool escaped = false;
-	bool skipNext = false;
-	//int next = csvReader.get();
+// push new token onto output array
+inline void CSVParser::saveToken(char* start, char* end, bool parse){
+	//tracef("saveToken : %u %u", start, end - start);
+	inline_as3(
+		"ram_init.position = %0;"
+		"var token:String = ram_init.readUTFBytes(%1);"
+		: : "r"(start), "r"(end - start)
+	);
 
-	char* start = csvInput;
-	char* end = csvInput;
+	// if there are at least two characters and the token is surrounded with quotes, parse the token
+	if (parse && end - start >= 2 && *start == quote && *(end - 1) == quote)
+		inline_nonreentrant_as3("token = token.substr(1, token.length - 2).split('\"\"').join('\"');");
 
-	// special case -- if csv is empty, return an empty array (a set of zero rows)
-	if (!*csvInput){
-		//vector< vector<string> > empty(0);
-		//return empty;
-	}
+	// TODO: handle odd case for token like "Hel"lo where excel would change it into Hello
 
+	inline_nonreentrant_as3("outputRow[outputCol++] = token;");
+}
 
-	//string* token = newToken(rows, true); // new row
-	char next = csvInput[0];
-	//for (int charIndex = 0; charIndex < csvInput.length(); charIndex++){
-
-	while (*csvInput++)
+//TODO: option for removing blank lines (rows with one item, "")
+inline void CSVParser::parseCSV(char* csvInput, bool parseTokens)
+{
+	// special case -- if csv is empty, do nothing
+	if (*csvInput)
 	{
+		bool escaped = false;
 
-		char chr = (char) next;
-	  //  char chr =  next;
-		next = *csvInput;
+		char* start = csvInput;
 
-		if (skipNext)
+		char chr;
+		char *next = csvInput;
+		while (chr = *next++)
 		{
-			skipNext = false;
-			continue;
-		}
-
-		if (escaped)
-		{
-			if (chr == quote)
+			if (escaped)
 			{
-				// append quote if not parsing tokens
-				//if (!parseTokens)
-					//*token += quote;
-				if (next == quote) // escaped quote
+				if (chr == quote)
 				{
-					// always append second quote
-					//*token += quote;
-					// skip second quote mark
-					skipNext = true;
+					if (*next == quote) // escaped quote
+					{
+						// skip second quote mark
+						next++;
+					}
+					else // end of escaped text
+					{
+						escaped = false;
+					}
 				}
-				else // end of escaped text
+			}
+			else
+			{
+				if (chr == delimiter)
 				{
-					escaped = false;
+					// end of current token
+					saveToken(start, next - 1, parseTokens);
+					start = next; // new token begins after delimiter
+				}
+				else if (chr == quote && csvInput == start) // quote at beginning of token
+				{
+					// beginning of escaped token
+					escaped = true;
+				}
+				else if (chr == LF)
+				{
+					// end of current token and current row
+					saveToken(start, next - 1, parseTokens);
+					start = next; // new token begins after LF
+					newRow();
+				}
+				else if (chr == CR)
+				{
+					// end of current token and current row
+					saveToken(start, next - 1, parseTokens);
+
+					// handle CRLF
+					if (*next == LF)
+						start = ++next; // new token begins after CRLF
+					else
+						start = next; // new token begins after CR
+					newRow();
 				}
 			}
-			//else
-			//{
-				//*token += chr;
-			//}
 		}
-		else
-		{
-			if (chr == delimiter)
-			{
-				// start new token on same row
-				//tracef(token->c_str());
-				//token = newToken(rows, false);
-			}
-			else if (chr == quote && start == end)
-			{
-				// beginning of escaped token
-				escaped = true;
-				//if (!parseTokens)
-					//*token += chr;
-			}
-			else if (chr == LF)
-			{
-				// start new token on new row
-				//tracef(token->c_str());
-				//token = newToken(rows, true);
-			}
-			else if (chr == CR)
-			{
-				// handle CRLF
-				if (next == LF)
-					skipNext = true; // skip line feed
-				// start new token on new row
-				//tracef(token->c_str());
-				//token = newToken(rows, true);
-			}
-			//else //append single character to current token
-				//*token += chr;
-		}
+
+		saveToken(start, next - 1, parseTokens);
 	}
 
-	// if there is more than one row and last row is empty,
-	// remove last row assuming it is there because of a newline at the end of the file.
-	/*while (rows.size() > 1)
-	{
-		vector<string* >* lastRow = rows.back();
-		string*  lastElement = lastRow->back();
-
-		if (lastRow->size() == 1 && lastElement->length() == 0)
-			rows.pop_back(); // remove last row
-		else
-			break;
-	}
-
-	// find the maximum number of columns in a row
-	int columnCount = 0;
-	int size = rows.size();
-	for (int rowIndex = 0 ; rowIndex < size; rowIndex++)
-	{
-		vector <string* >* row = rows.at(rowIndex);
-		int rowSize = row->size();
-		//cout << "rowSize" << endl;
-		//cout << row->size() << endl;
-		columnCount = max(columnCount, rowSize);
-	}*/
-
-	// create a 2D String array
-/*	vector <vector<string> > result(size);
-	for (int i = 0, j; i < size; i++)
-	{
-		vector<string* >* rowVector = rows.at(i);
-		//rows[i] = ; // free the memory
-		vector <string> rowArray(columnCount);
-		// the row may not have all the columns
-		int vectorSize =  rowVector->size();
-		string* str;
-		for (j = 0; j <vectorSize; j++)
-		{
-			str =  rowVector->at(j);
-			//cout<< *str << endl;
-			rowArray[j] =  *str;
-		}
-		//remove the allocated memory
-		delete rowVector;
-		delete str;
-		// fill remaining columns with empty Strings
-		for (; j < columnCount; j++)
-			rowArray[j] = "";
-		result[i] = rowArray;
-	}
-
-	return result;*/
+	// remove last line if it's blank (trailing newline character)
+	inline_nonreentrant_as3("if (outputCol == 1 && outputRow[0] == '') output.pop();");
 }
 
 CSVParser::~CSVParser() {
